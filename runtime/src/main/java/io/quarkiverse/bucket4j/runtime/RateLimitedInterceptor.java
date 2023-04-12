@@ -1,5 +1,6 @@
 package io.quarkiverse.bucket4j.runtime;
 
+import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
@@ -9,6 +10,7 @@ import io.github.bucket4j.Bucket;
 
 @RateLimited
 @Interceptor
+@Priority(Interceptor.Priority.LIBRARY_BEFORE)
 public class RateLimitedInterceptor {
 
     @Inject
