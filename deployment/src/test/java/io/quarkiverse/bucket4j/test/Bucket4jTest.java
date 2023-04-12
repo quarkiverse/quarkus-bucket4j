@@ -23,8 +23,8 @@ public class Bucket4jTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.limits.group1.first.max-usage: 1\n" +
-                            "quarkus.rate-limiter.limits.group1.first.period: 1S"), "application.properties"));
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.limits.group1[0].max-usage: 1\n" +
+                            "quarkus.rate-limiter.limits.group1[0].period: 1S"), "application.properties"));
 
     @Inject
     RateLimitedMethods methods;

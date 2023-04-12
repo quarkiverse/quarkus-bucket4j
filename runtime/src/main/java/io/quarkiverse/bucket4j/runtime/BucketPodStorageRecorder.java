@@ -22,8 +22,8 @@ public class BucketPodStorageRecorder {
 
     public RuntimeValue<BucketPod> getBucketPod(String key) {
         ConfigurationBuilder builder = BucketConfiguration.builder();
-        for (RateLimiterConfig.Limit limit : config.limits.get(key).values()) {
-            builder.addLimit(Bandwidth.simple(limit.maxUsage, limit.period));
+        for (RateLimiterConfig.Limit limit : config.limits().get(key)) {
+            builder.addLimit(Bandwidth.simple(limit.maxUsage(), limit.period()));
         }
         return new RuntimeValue<>(new BucketPod(builder.build()));
     }
