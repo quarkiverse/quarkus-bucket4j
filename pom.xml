@@ -12,6 +12,7 @@
   <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Quarkus Bucket4j - Parent</name>
+  <description>Rate-limiting library based on token-bucket algorithm.</description>
   <modules>
     <module>deployment</module>
     <module>runtime</module>
@@ -22,7 +23,7 @@
     <maven.compiler.release>11</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus.version>3.0.0.CR2</quarkus.version>
+    <quarkus.version>3.0.0.Final</quarkus.version>
   </properties>
   <dependencyManagement>
     <dependencies>
