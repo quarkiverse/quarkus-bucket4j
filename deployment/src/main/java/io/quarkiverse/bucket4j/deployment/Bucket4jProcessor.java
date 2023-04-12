@@ -14,13 +14,18 @@ import org.jboss.jandex.MethodInfo;
 import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
+import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorage;
+import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.RateLimitedInterceptor;
-import io.quarkiverse.bucket4j.runtime.RateLimiterConfig;
+import io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver;
+import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanArchiveIndexBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
@@ -45,10 +50,21 @@ class Bucket4jProcessor {
     }
 
     @BuildStep
+    AdditionalBeanBuildItem constantResolver() {
+        return AdditionalBeanBuildItem.unremovableOf(ConstantResolver.class);
+    }
+
+    @BuildStep
+    void ipResolver(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
+        if (capabilities.isPresent(Capability.VERTX_HTTP)) {
+            additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(IpResolver.class));
+        }
+    }
+
+    @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     void gatherRateLimitCheck(BeanArchiveIndexBuildItem beanArchiveBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            RateLimiterConfig rateLimiterConfig,
             BucketPodStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
@@ -62,7 +78,7 @@ class Bucket4jProcessor {
                 MethodInfo methodInfo = target.asMethod();
                 //methodToInstanceCollector.put(methodInfo, instance);
                 perMethodPods.put(methodInfo, sharedPods.computeIfAbsent(instance.value("limitsKey").asString(),
-                        (key) -> recorder.getBucketPod(rateLimiterConfig.limits.get(key))));
+                        (key) -> recorder.getBucketPod(key)));
             }
         }
 
@@ -75,6 +91,32 @@ class Bucket4jProcessor {
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(BucketPodStorage.class)
+                        .scope(ApplicationScoped.class)
+                        .unremovable()
+                        .runtimeValue(recorder.create())
+                        .done());
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    void gatherIdentityKeyResolvers(BeanArchiveIndexBuildItem beanArchiveBuildItem,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+            IdentityKeyResolverStorageRecorder recorder) {
+
+        Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
+
+        for (AnnotationInstance instance : instances) {
+
+            AnnotationTarget target = instance.target();
+            if (target.kind() == AnnotationTarget.Kind.METHOD) {
+                MethodInfo methodInfo = target.asMethod();
+                recorder.registerMethod(createDescription(methodInfo), instance
+                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString());
+            }
+        }
+
+        syntheticBeans.produce(
+                SyntheticBeanBuildItem.configure(IdentityKeyResolverStorage.class)
                         .scope(ApplicationScoped.class)
                         .unremovable()
                         .runtimeValue(recorder.create())

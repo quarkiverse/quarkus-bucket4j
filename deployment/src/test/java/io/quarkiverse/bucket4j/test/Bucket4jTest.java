@@ -1,6 +1,7 @@
 package io.quarkiverse.bucket4j.test;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.inject.Inject;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
+import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class Bucket4jTest {
@@ -28,9 +30,14 @@ public class Bucket4jTest {
     RateLimitedMethods methods;
 
     @Test
-    public void assertThatRateLimitExceptionIsThrown() {
+    public void rateLimitExceptionIsThrownIfQuotaIsExceeded() {
         methods.limited();
         Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
+    }
+
+    @Test
+    public void contextNotActiveExceptionIsThrownIfIpResolverIsUsedOutsideRequestContext() {
+        Assertions.assertThrows(ContextNotActiveException.class, () -> methods.limitedByIp());
     }
 
     @ApplicationScoped
@@ -40,5 +47,11 @@ public class Bucket4jTest {
         public String limited() {
             return "LIMITED";
         }
+
+        @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+        public String limitedByIp() {
+            return "LIMITED";
+        }
+
     }
 }

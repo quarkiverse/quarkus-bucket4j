@@ -16,11 +16,13 @@ public class RateLimitedInterceptor {
     @Inject
     BucketPodStorage bucketPodStorage;
 
+    @Inject
+    IdentityKeyResolverStorage identityKeyResolverStorage;
+
     @AroundInvoke
     Object around(InvocationContext context) throws Throwable {
-
-        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket("test");
-
+        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket(
+                identityKeyResolverStorage.getIdentityKeyResolver(context.getMethod()).getIdentityKey());
         if (bucket.tryConsume(1)) {
             return context.proceed();
         }

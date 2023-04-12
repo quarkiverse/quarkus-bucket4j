@@ -12,11 +12,17 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class BucketPodStorageRecorder {
 
+    private final RateLimiterConfig config;
+
+    public BucketPodStorageRecorder(RateLimiterConfig config) {
+        this.config = config;
+    }
+
     Map<MethodDescription, BucketPod> pods = new HashMap<>();
 
-    public RuntimeValue<BucketPod> getBucketPod(Map<String, RateLimiterConfig.Limit> key) {
+    public RuntimeValue<BucketPod> getBucketPod(String key) {
         ConfigurationBuilder builder = BucketConfiguration.builder();
-        for (RateLimiterConfig.Limit limit : key.values()) {
+        for (RateLimiterConfig.Limit limit : config.limits.get(key).values()) {
             builder.addLimit(Bandwidth.simple(limit.maxUsage, limit.period));
         }
         return new RuntimeValue<>(new BucketPod(builder.build()));

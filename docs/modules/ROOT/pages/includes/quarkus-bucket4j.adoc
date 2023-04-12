@@ -1,0 +1,26 @@
+
+:summaryTableId: quarkus-bucket4j
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-bucket4j_configuration]]link:#quarkus-bucket4j_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a|icon:lock[title=Fixed at build time] [[quarkus-bucket4j_quarkus.bucket4j.limits-limits]]`link:#quarkus-bucket4j_quarkus.bucket4j.limits-limits[quarkus.bucket4j.limits]`
+
+[.description]
+--
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_BUCKET4J_LIMITS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_BUCKET4J_LIMITS+++`
+endif::add-copy-button-to-env-var[]
+--|`Map<String,Map<String,Limit>>` 
+|
+
+|===
