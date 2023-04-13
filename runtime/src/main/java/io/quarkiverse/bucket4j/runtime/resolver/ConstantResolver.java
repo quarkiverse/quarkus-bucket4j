@@ -7,7 +7,7 @@ import jakarta.inject.Singleton;
  * For a given rate limited method, all requests will use the same bucket
  */
 @Singleton
-public class ConstantResolver implements IdentityKeyResolver {
+public class ConstantResolver implements IdentityResolver {
     @Override
     public String getIdentityKey() {
         return "io.quarkiverse.bucket4j.runtime.resolver.CONSTANT";

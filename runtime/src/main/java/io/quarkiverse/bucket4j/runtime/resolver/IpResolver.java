@@ -11,7 +11,7 @@ import io.vertx.ext.web.RoutingContext;
  * Vertx Http must be present in the project in order to use this
  */
 @RequestScoped
-public class IpResolver implements IdentityKeyResolver {
+public class IpResolver implements IdentityResolver {
     @Inject
     RoutingContext context;
 

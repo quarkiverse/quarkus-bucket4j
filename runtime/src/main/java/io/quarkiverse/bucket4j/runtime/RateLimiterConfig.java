@@ -21,8 +21,8 @@ public interface RateLimiterConfig {
      * identified by the limitsKey
      * If multiple methods share the same limitKey, their bucket are shared
      */
-    @ConfigDocMapKey("limitsKey")
-    Map<String, List<Limit>> limits();
+    @ConfigDocMapKey("bucket-id")
+    Map<String, List<Limit>> buckets();
 
     /**
      * represent one single limit

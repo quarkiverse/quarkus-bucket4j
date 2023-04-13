@@ -29,7 +29,7 @@ public class MissingConfigTest {
     @ApplicationScoped
     public static class RateLimitedMethods {
 
-        @RateLimited(limitsKey = "group1")
+        @RateLimited(bucket = "group1")
         public String limited() {
             return "LIMITED";
         }

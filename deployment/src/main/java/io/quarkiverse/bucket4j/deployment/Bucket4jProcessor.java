@@ -16,8 +16,8 @@ import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.DefaultProxyManagerProducer;
-import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorage;
-import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorageRecorder;
+import io.quarkiverse.bucket4j.runtime.IdentityResolverStorage;
+import io.quarkiverse.bucket4j.runtime.IdentityResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
 import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimitExceptionMapper;
@@ -100,7 +100,7 @@ class Bucket4jProcessor {
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
                 //methodToInstanceCollector.put(methodInfo, instance);
-                perMethodPods.put(methodInfo, sharedPods.computeIfAbsent(instance.value("limitsKey").asString(),
+                perMethodPods.put(methodInfo, sharedPods.computeIfAbsent(instance.value("bucket").asString(),
                         (key) -> recorder.getBucketPod(key)));
             }
         }
@@ -124,7 +124,7 @@ class Bucket4jProcessor {
     @Record(ExecutionTime.STATIC_INIT)
     void gatherIdentityKeyResolvers(BeanArchiveIndexBuildItem beanArchiveBuildItem,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            IdentityKeyResolverStorageRecorder recorder) {
+            IdentityResolverStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
 
@@ -139,7 +139,7 @@ class Bucket4jProcessor {
         }
 
         syntheticBeans.produce(
-                SyntheticBeanBuildItem.configure(IdentityKeyResolverStorage.class)
+                SyntheticBeanBuildItem.configure(IdentityResolverStorage.class)
                         .scope(ApplicationScoped.class)
                         .unremovable()
                         .runtimeValue(recorder.create())
