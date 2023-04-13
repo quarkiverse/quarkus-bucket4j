@@ -18,16 +18,24 @@ import io.quarkiverse.bucket4j.runtime.resolver.IdentityKeyResolver;
 @Retention(RUNTIME)
 public @interface RateLimited {
 
-    enum SegmentationMode {
-        UNSEGMENTED,
-        SEGMENT_BY_IP
-    }
-
     String DEFAULT_KEY = "io.quarkiverse.bucket4j.runtime.RateLimited<DEFAULT>";
 
+    /**
+     * This is the configuration key that hold the limits for this endpoint
+     * If two methods share the same key, their buckets will be shared.
+     * This mean that for a given identity key, the number of allowed requests
+     * is shared for all the methods with the same limitsKey
+     */
     @Nonbinding
     String limitsKey() default DEFAULT_KEY;
 
+    /**
+     * This is the resolver for the segmentation key.
+     * there are two provided strategies you can use:
+     * ConstantResolver, disable the segmentation completely
+     * IpResolver, segment by source Ip address
+     * Or you can implement a custom resolver, which must be a CDI bean
+     */
     @Nonbinding
     Class<? extends IdentityKeyResolver> identityResolver() default ConstantResolver.class;
 

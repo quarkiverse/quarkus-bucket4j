@@ -2,24 +2,53 @@
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.bucket4j/quarkus-bucket4j?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.bucket4j/quarkus-bucket4j)
 
-## Welcome to Quarkiverse!
+easy rate-limiting based on token-bucket algorithm
 
-Congratulations and thank you for creating a new Quarkus extension project in Quarkiverse!
+## Getting Started
 
-Feel free to replace this content with the proper description of your new project and necessary instructions how to use and contribute to it.
+Read the full documentation [TODO].
 
-You can find the basic info, Quarkiverse policies and conventions in [the Quarkiverse wiki](https://github.com/quarkiverse/quarkiverse/wiki).
+### Usage
 
-In case you are creating a Quarkus extension project for the first time, please follow [Building My First Extension](https://quarkus.io/guides/building-my-first-extension) guide.
+Annotate the method that need to be throttled with @RateLimited
 
-Other useful articles related to Quarkus extension development can be found under the [Writing Extensions](https://quarkus.io/guides/#writing-extensions) guide category on the [Quarkus.io](https://quarkus.io) website.
+``` java
+@ApplicationScoped
+public static class RateLimitedMethods {
 
-Thanks again, good luck and have fun!
+    @RateLimited(limitsKey = "group1")
+    public String limited() {
+        return "LIMITED";
+    }
 
-## Documentation
+}
+```
 
-The documentation for this extension should be maintained as part of this repository and it is stored in the `docs/` directory.
+And add a limit group using the same limitsKey in the configuration:
 
-The layout should follow the [Antora's Standard File and Directory Set](https://docs.antora.org/antora/2.3/standard-directories/).
+``` properties
+# burst protection
+quarkus.rate-limiter.limits.group1[0].max-usage: 10
+quarkus.rate-limiter.limits.group1[0].period: 1S
+# fair use
+quarkus.rate-limiter.limits.group1[1].max-usage: 100
+quarkus.rate-limiter.limits.group1[1].period: 5M
+```
 
-Once the docs are ready to be published, please open a PR including this repository in the [Quarkiverse Docs Antora playbook](https://github.com/quarkiverse/quarkiverse-docs/blob/main/antora-playbook.yml#L7). See an example [here](https://github.com/quarkiverse/quarkiverse-docs/pull/1).
+The limit group can contain multiple limit that will all be enforced.
+
+If you want to enable throttling per user, simply specify an IdentityKeyResolver in the RateLimited annotation
+
+``` java
+@ApplicationScoped
+public static class RateLimitedMethods {
+
+    @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+    public String limitedByIp() {
+        return "LIMITED";
+    }
+}
+```
+
+IpResolver is provided out of the box. if you want a more complex segmentation, you can implement your own resolver.
+A custom resolver must be a valid CDI Bean.
