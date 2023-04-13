@@ -15,6 +15,7 @@ import org.jboss.jandex.MethodInfo;
 import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
+import io.quarkiverse.bucket4j.runtime.DefaultProxyManagerProducer;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorage;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
@@ -47,6 +48,11 @@ class Bucket4jProcessor {
     @BuildStep
     FeatureBuildItem feature() {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    AdditionalBeanBuildItem caffeineProxyManager() {
+        return AdditionalBeanBuildItem.unremovableOf(DefaultProxyManagerProducer.class);
     }
 
     @BuildStep
