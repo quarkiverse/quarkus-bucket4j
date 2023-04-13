@@ -14,23 +14,23 @@ import io.quarkus.runtime.annotations.Recorder;
 public class BucketPodStorageRecorder {
 
     private final RateLimiterConfig config;
+    Map<MethodDescription, BucketPod> pods = new HashMap<>();
 
     public BucketPodStorageRecorder(RateLimiterConfig config) {
         this.config = config;
     }
-
-    Map<MethodDescription, BucketPod> pods = new HashMap<>();
 
     public RuntimeValue<BucketPod> getBucketPod(String key) {
         List<RateLimiterConfig.Limit> limits = config.limits().get(key);
         if (limits == null) {
             throw new IllegalStateException("missing limits config for " + key);
         }
+
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (RateLimiterConfig.Limit limit : limits) {
             builder.addLimit(Bandwidth.simple(limit.maxUsage(), limit.period()));
         }
-        return new RuntimeValue<>(new BucketPod(builder.build()));
+        return new RuntimeValue<>(new BucketPod(key, builder.build()));
     }
 
     public void registerMethod(MethodDescription description,
