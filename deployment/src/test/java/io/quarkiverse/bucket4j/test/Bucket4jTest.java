@@ -32,7 +32,14 @@ public class Bucket4jTest {
     @Test
     public void rateLimitExceptionIsThrownIfQuotaIsExceeded() {
         methods.limited();
-        Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
+        RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
+        assertBetween(900_000_000, 1000_000_000, rateLimitException.getWaitTimeInNanoSeconds());
+
+    }
+
+    private void assertBetween(long min, long max, long value) {
+        Assertions.assertTrue(value < max);
+        Assertions.assertTrue(value > min);
     }
 
     @Test
