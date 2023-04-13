@@ -40,7 +40,7 @@ public class RateLimitJaxrsTest {
         given()
                 .when().get("/test")
                 .then()
-                .statusCode(500); // TODO, this should be mapped to 429
+                .statusCode(429);
 
     }
 
