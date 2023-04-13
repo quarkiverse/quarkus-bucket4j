@@ -17,6 +17,6 @@ public class IpResolver implements IdentityKeyResolver {
 
     @Override
     public String getIdentityKey() {
-        return context.request().host();
+        return context.request().remoteAddress().host();
     }
 }

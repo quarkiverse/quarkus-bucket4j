@@ -7,6 +7,7 @@ import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
 
 import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.quarkiverse.bucket4j.runtime.resolver.IdentityKeyResolver;
 
@@ -29,10 +30,11 @@ public class RateLimitedInterceptor {
         Bucket bucket = getBucket(bucketPodStorage.getBucketPod(context.getMethod()),
                 identityKeyResolverStorage.getIdentityKeyResolver(context.getMethod()));
 
-        if (bucket.tryConsume(1)) {
+        ConsumptionProbe consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
+        if (consumptionProbe.isConsumed()) {
             return context.proceed();
         }
-        throw new RateLimitException(bucket.estimateAbilityToConsume(1).getNanosToWaitForRefill());
+        throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill());
     }
 
     private Bucket getBucket(BucketPod pod, IdentityKeyResolver keyResolver) {

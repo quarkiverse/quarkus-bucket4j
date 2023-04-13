@@ -31,7 +31,7 @@ public class IdentityKeyResolverTest {
     IdentityKeyResolverStorage storage;
 
     @Test
-    public void podIsCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
+    public void identityResolverIsCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
         IdentityKeyResolver resolver = storage.getIdentityKeyResolver(RateLimitedMethods.class.getMethod("limited"));
         assertThat(resolver)
                 .isNotNull()
