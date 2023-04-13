@@ -26,6 +26,6 @@ public class RateLimitedInterceptor {
         if (bucket.tryConsume(1)) {
             return context.proceed();
         }
-        throw new RateLimitException();
+        throw new RateLimitException(bucket.estimateAbilityToConsume(1).getNanosToWaitForRefill());
     }
 }
