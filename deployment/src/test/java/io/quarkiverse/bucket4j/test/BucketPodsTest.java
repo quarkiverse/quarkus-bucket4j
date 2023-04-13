@@ -1,5 +1,7 @@
 package io.quarkiverse.bucket4j.test;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -36,12 +38,16 @@ public class BucketPodsTest {
         BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("limited"));
         Assertions.assertNotNull(pod);
         BucketConfiguration configuration = pod.getConfiguration();
-        Assertions.assertEquals(2, configuration.getBandwidths().length);
-        Assertions.assertEquals(10L, configuration.getBandwidths()[0].getCapacity());
-        Assertions.assertEquals(1000_000_000L, configuration.getBandwidths()[0].getRefillPeriodNanos());
-        Assertions.assertEquals(100L, configuration.getBandwidths()[1].getCapacity());
-        Assertions.assertEquals(300_000_000_000L, configuration.getBandwidths()[1].getRefillPeriodNanos());
-
+        assertThat(configuration.getBandwidths())
+                .hasSize(2);
+        assertThat(configuration.getBandwidths()[0].getCapacity())
+                .isEqualTo(10L);
+        assertThat(configuration.getBandwidths()[0].getRefillPeriodNanos())
+                .isEqualTo(1000_000_000L);
+        assertThat(configuration.getBandwidths()[1].getCapacity())
+                .isEqualTo(100L);
+        assertThat(configuration.getBandwidths()[1].getRefillPeriodNanos())
+                .isEqualTo(300_000_000_000L);
     }
 
     @ApplicationScoped

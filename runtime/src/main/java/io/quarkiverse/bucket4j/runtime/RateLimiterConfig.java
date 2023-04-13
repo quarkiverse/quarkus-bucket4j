@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
@@ -16,8 +17,11 @@ import io.smallrye.config.WithConverter;
 public interface RateLimiterConfig {
 
     /**
-     * limits
+     * represent a group of limit applied to a method
+     * identified by the limitsKey
+     * If multiple methods share the same limitKey, their bucket are shared
      */
+    @ConfigDocMapKey("limitsKey")
     Map<String, List<Limit>> limits();
 
     /**
