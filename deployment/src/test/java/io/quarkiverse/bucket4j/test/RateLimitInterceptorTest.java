@@ -1,5 +1,7 @@
 package io.quarkiverse.bucket4j.test;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.inject.Inject;
@@ -16,7 +18,7 @@ import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class RateLimitTest {
+public class RateLimitInterceptorTest {
 
     // Start unit test with your extension loaded
     @RegisterExtension
@@ -33,13 +35,8 @@ public class RateLimitTest {
     public void rateLimitExceptionIsThrownIfQuotaIsExceeded() {
         methods.limited();
         RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
-        assertBetween(900_000_000, 1000_000_000, rateLimitException.getWaitTimeInNanoSeconds());
-
-    }
-
-    private void assertBetween(long min, long max, long value) {
-        Assertions.assertTrue(value < max);
-        Assertions.assertTrue(value > min);
+        assertThat(rateLimitException.getWaitTimeInNanoSeconds())
+                .isBetween(800_000_000L, 1000_000_000L);
     }
 
     @Test
