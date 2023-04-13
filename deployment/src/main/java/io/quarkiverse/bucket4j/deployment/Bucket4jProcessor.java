@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Priorities;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -17,6 +18,7 @@ import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorage;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
+import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimitExceptionMapper;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.RateLimitedInterceptor;
@@ -32,6 +34,8 @@ import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.ExecutionTime;
 import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
+import io.quarkus.resteasy.common.spi.ResteasyJaxrsProviderBuildItem;
+import io.quarkus.resteasy.reactive.spi.ExceptionMapperBuildItem;
 import io.quarkus.runtime.RuntimeValue;
 
 class Bucket4jProcessor {
@@ -56,10 +60,15 @@ class Bucket4jProcessor {
     }
 
     @BuildStep
-    void exceptionMapper(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
-        if (capabilities.isPresent(Capability.RESTEASY_REACTIVE)) {
-            additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(RateLimitExceptionMapper.class));
-        }
+    void exceptionMapper(BuildProducer<ResteasyJaxrsProviderBuildItem> resteasyJaxrsProviderBuildItemBuildProducer,
+            BuildProducer<ExceptionMapperBuildItem> exceptionMapperBuildItemBuildProducer) {
+
+        resteasyJaxrsProviderBuildItemBuildProducer
+                .produce(new ResteasyJaxrsProviderBuildItem(RateLimitExceptionMapper.class.getName()));
+        exceptionMapperBuildItemBuildProducer
+                .produce(new ExceptionMapperBuildItem(RateLimitExceptionMapper.class.getName(),
+                        RateLimitException.class.getName(), Priorities.USER + 100, false));
+
     }
 
     @BuildStep
