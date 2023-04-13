@@ -17,6 +17,7 @@ import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorage;
 import io.quarkiverse.bucket4j.runtime.IdentityKeyResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
+import io.quarkiverse.bucket4j.runtime.RateLimitExceptionMapper;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.RateLimitedInterceptor;
 import io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver;
@@ -52,6 +53,13 @@ class Bucket4jProcessor {
     @BuildStep
     AdditionalBeanBuildItem constantResolver() {
         return AdditionalBeanBuildItem.unremovableOf(ConstantResolver.class);
+    }
+
+    @BuildStep
+    void exceptionMapper(Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> additionalBeans) {
+        if (capabilities.isPresent(Capability.RESTEASY_REACTIVE)) {
+            additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(RateLimitExceptionMapper.class));
+        }
     }
 
     @BuildStep
