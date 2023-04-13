@@ -23,4 +23,8 @@ public class BucketPod {
         return buckets.computeIfAbsent(key, (k) -> new LockFreeBucket(configuration, INTEGER_64_BITS, SYSTEM_MILLISECONDS));
     }
 
+    public BucketConfiguration getConfiguration() {
+        return this.configuration;
+    }
+
 }
