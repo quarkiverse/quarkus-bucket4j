@@ -16,7 +16,7 @@ import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class Bucket4jTest {
+public class RateLimitTest {
 
     // Start unit test with your extension loaded
     @RegisterExtension
