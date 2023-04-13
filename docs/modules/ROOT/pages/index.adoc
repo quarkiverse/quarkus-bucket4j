@@ -1,8 +1,10 @@
 = Quarkus Bucket4j
+:extension-status: experimental
 
 include::./includes/attributes.adoc[]
 
-TIP: Describe what the extension does here.
+Bucket4J is a Java rate-limiting library based on the token-bucket algorithm. Bucket4j is a thread-safe library that can be used in either a standalone JVM application, or a clustered environment. It also supports in-memory or distributed caching via the JCache (JSR107) specification.
+This extension allow you to control the request rate sent to your application by using a dead simple API.
 
 == Installation
 
@@ -19,9 +21,61 @@ For instance, with Maven, add the following dependency to your POM file:
 </dependency>
 ----
 
+[#getting-started]
+== Getting Started
+
+=== Throttling a Method
+
+Annotate the method that need to be throttled with @RateLimited
+
+[source,java]
+----
+@ApplicationScoped
+public static class RateLimitedMethods {
+
+    @RateLimited(limitsKey = "group1")
+    public String limited() {
+        return "LIMITED";
+    }
+
+}
+----
+
+And add a limit group using the same limitsKey in the configuration:
+
+[source,properties]
+----
+# burst protection
+quarkus.rate-limiter.limits.group1[0].max-usage: 10
+quarkus.rate-limiter.limits.group1[0].period: 1S
+# fair use
+quarkus.rate-limiter.limits.group1[1].max-usage: 100
+quarkus.rate-limiter.limits.group1[1].period: 5M
+----
+
+The limit group can contain multiple limit that will all be enforced.
+
+=== Population Segmentation
+
+If you want to enable throttling per user, simply specify an IdentityKeyResolver in the RateLimited annotation.
+The default one is the ConstantResolver, which will cause the segmentation to be disabled.
+
+[source,java]
+----
+@ApplicationScoped
+public static class RateLimitedMethods {
+
+    @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+    public String limitedByIp() {
+        return "LIMITED";
+    }
+}
+----
+
+IpResolver is provided out of the box. if you want a more complex segmentation, you can implement your own resolver.
+A custom resolver must be a valid CDI Bean.
+
 [[extension-configuration-reference]]
 == Extension Configuration Reference
-
-TIP: Remove this section if you don't have Quarkus configuration properties in your extension.
 
 include::includes/quarkus-bucket4j.adoc[leveloffset=+1, opts=optional]

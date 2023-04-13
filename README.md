@@ -2,7 +2,8 @@
 
 [![Version](https://img.shields.io/maven-central/v/io.quarkiverse.bucket4j/quarkus-bucket4j?logo=apache-maven&style=flat-square)](https://search.maven.org/artifact/io.quarkiverse.bucket4j/quarkus-bucket4j)
 
-easy rate-limiting based on token-bucket algorithm
+Bucket4J is a Java rate-limiting library based on the token-bucket algorithm. Bucket4j is a thread-safe library that can be used in either a standalone JVM application, or a clustered environment. It also supports in-memory or distributed caching via the JCache (JSR107) specification.
+This extension allow you to control the request rate sent to your application by using a dead simple API.
 
 ## Getting Started
 
