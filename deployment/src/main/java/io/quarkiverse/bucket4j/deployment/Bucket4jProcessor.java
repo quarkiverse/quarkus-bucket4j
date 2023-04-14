@@ -2,6 +2,7 @@ package io.quarkiverse.bucket4j.deployment;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,6 +41,8 @@ import io.quarkus.resteasy.reactive.spi.ExceptionMapperBuildItem;
 import io.quarkus.runtime.RuntimeValue;
 
 class Bucket4jProcessor {
+
+    public static final DotName RATE_LIMITED_INTERCEPTOR = DotName.createSimple(RateLimitedInterceptor.class.getName());
 
     public static final DotName RATE_LIMITED = DotName.createSimple(RateLimited.class.getName());
 
@@ -91,17 +94,24 @@ class Bucket4jProcessor {
             BucketPodStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
-        //Map<MethodInfo, AnnotationInstance> methodToInstanceCollector = new HashMap<>();
-        Map<String, RuntimeValue<BucketPod>> sharedPods = new HashMap<>();
         Map<MethodInfo, RuntimeValue<BucketPod>> perMethodPods = new HashMap<>();
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
-                //methodToInstanceCollector.put(methodInfo, instance);
-                perMethodPods.put(methodInfo, sharedPods.computeIfAbsent(instance.value("bucket").asString(),
-                        (key) -> recorder.getBucketPod(key)));
+                perMethodPods.put(methodInfo, recorder.getBucketPod(instance.value("bucket").asString()));
+            }
+        }
+
+        for (AnnotationInstance instance : instances) {
+            AnnotationTarget target = instance.target();
+            if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
+                RuntimeValue<BucketPod> bucket = recorder.getBucketPod(instance.value("bucket").asString());
+                List<MethodInfo> methods = target.asClass().methods();
+                for (MethodInfo methodInfo : methods) {
+                    perMethodPods.computeIfAbsent(methodInfo, (k) -> bucket);
+                }
             }
         }
 
@@ -133,8 +143,21 @@ class Bucket4jProcessor {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
-                recorder.registerMethod(createDescription(methodInfo), instance
-                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString());
+                String identityResolver = instance
+                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
+                recorder.registerMethod(createDescription(methodInfo), identityResolver);
+            }
+        }
+
+        for (AnnotationInstance instance : instances) {
+            AnnotationTarget target = instance.target();
+            if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
+                String identityResolver = instance
+                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
+                List<MethodInfo> methods = target.asClass().methods();
+                for (MethodInfo methodInfo : methods) {
+                    recorder.registerMethod(createDescription(methodInfo), identityResolver);
+                }
             }
         }
 

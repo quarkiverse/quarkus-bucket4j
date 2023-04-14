@@ -1,7 +1,6 @@
 package io.quarkiverse.bucket4j.runtime;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import io.github.bucket4j.Bandwidth;
@@ -21,13 +20,13 @@ public class BucketPodStorageRecorder {
     }
 
     public RuntimeValue<BucketPod> getBucketPod(String key) {
-        List<RateLimiterConfig.Limit> limits = config.buckets().get(key);
-        if (limits == null) {
+        RateLimiterConfig.Bucket bucket = config.buckets().get(key);
+        if (bucket == null) {
             throw new IllegalStateException("missing limits config for " + key);
         }
 
         ConfigurationBuilder builder = BucketConfiguration.builder();
-        for (RateLimiterConfig.Limit limit : limits) {
+        for (RateLimiterConfig.Limit limit : bucket.limits()) {
             builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
         }
         return new RuntimeValue<>(new BucketPod(key, builder.build()));

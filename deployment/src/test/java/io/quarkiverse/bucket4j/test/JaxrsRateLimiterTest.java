@@ -24,8 +24,8 @@ public class JaxrsRateLimiterTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].permitted-uses: 1\n" +
-                            "quarkus.rate-limiter.buckets.group1[0].period: 1S"), "application.properties"));
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 1\n" +
+                            "quarkus.rate-limiter.buckets.group1.limits[0].period: 1S"), "application.properties"));
 
     @Test
     public void status429IsReturnedIfQuotaIsExceeded() {

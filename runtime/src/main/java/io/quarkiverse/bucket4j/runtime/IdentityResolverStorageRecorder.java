@@ -20,11 +20,13 @@ public class IdentityResolverStorageRecorder {
 
     public void registerMethod(MethodDescription description, String className) {
 
-        try {
-            resolvers.put(description, (Class<? extends IdentityResolver>) getClass().getClassLoader().loadClass(className));
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        resolvers.computeIfAbsent(description, (k) -> {
+            try {
+                return (Class<? extends IdentityResolver>) getClass().getClassLoader().loadClass(className);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+        });
     }
 
     public RuntimeValue<IdentityResolverStorage> create() {
