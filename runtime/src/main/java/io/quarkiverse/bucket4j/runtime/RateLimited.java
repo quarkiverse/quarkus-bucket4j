@@ -11,23 +11,23 @@ import jakarta.enterprise.util.Nonbinding;
 import jakarta.interceptor.InterceptorBinding;
 
 import io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver;
-import io.quarkiverse.bucket4j.runtime.resolver.IdentityKeyResolver;
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 
 @InterceptorBinding
 @Target({ METHOD, TYPE })
 @Retention(RUNTIME)
 public @interface RateLimited {
 
-    String DEFAULT_KEY = "io.quarkiverse.bucket4j.runtime.RateLimited<DEFAULT>";
+    String DEFAULT_BUCKET = "io.quarkiverse.bucket4j.runtime.RateLimited<DEFAULT>";
 
     /**
-     * This is the configuration key that hold the limits for this endpoint
-     * If two methods share the same key, their buckets will be shared.
-     * This mean that for a given identity key, the number of allowed requests
-     * is shared for all the methods with the same limitsKey
+     * This is the bucket identity for this method.
+     * A configuration key that hold the limits for this bucket must exist
+     * If multiple methods share the same bucket, the number of allowed requests
+     * is shared for all them
      */
     @Nonbinding
-    String limitsKey() default DEFAULT_KEY;
+    String bucket() default DEFAULT_BUCKET;
 
     /**
      * This is the resolver for the segmentation key.
@@ -37,6 +37,6 @@ public @interface RateLimited {
      * Or you can implement a custom resolver, which must be a CDI bean
      */
     @Nonbinding
-    Class<? extends IdentityKeyResolver> identityResolver() default ConstantResolver.class;
+    Class<? extends IdentityResolver> identityResolver() default ConstantResolver.class;
 
 }

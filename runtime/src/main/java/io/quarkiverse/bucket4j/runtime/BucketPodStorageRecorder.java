@@ -21,7 +21,7 @@ public class BucketPodStorageRecorder {
     }
 
     public RuntimeValue<BucketPod> getBucketPod(String key) {
-        List<RateLimiterConfig.Limit> limits = config.limits().get(key);
+        List<RateLimiterConfig.Limit> limits = config.buckets().get(key);
         if (limits == null) {
             throw new IllegalStateException("missing limits config for " + key);
         }

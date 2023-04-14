@@ -46,14 +46,29 @@ And add a limit group using the same limitsKey in the configuration:
 [source,properties]
 ----
 # burst protection
-quarkus.rate-limiter.limits.group1[0].max-usage: 10
-quarkus.rate-limiter.limits.group1[0].period: 1S
+quarkus.rate-limiter.buckets.group1[0].max-usage: 10
+quarkus.rate-limiter.buckets.group1[0].period: 1S
 # fair use
-quarkus.rate-limiter.limits.group1[1].max-usage: 100
-quarkus.rate-limiter.limits.group1[1].period: 5M
+quarkus.rate-limiter.buckets.group1[1].max-usage: 100
+quarkus.rate-limiter.buckets.group1[1].period: 5M
 ----
 
-The limit group can contain multiple limit that will all be enforced.
+or with yaml:
+
+[source,yaml]
+----
+quarkus:
+  rate-limiter:
+    buckets:
+      group1:
+       - max-usage: 10
+         period: 1S
+       - max-usage: 100
+         period: 5M
+----
+
+The bucket can contain multiple limits that will all be enforced.
+If multiple methods share the same bucket, the number of allowed requests is shared for all them
 
 === Population Segmentation
 

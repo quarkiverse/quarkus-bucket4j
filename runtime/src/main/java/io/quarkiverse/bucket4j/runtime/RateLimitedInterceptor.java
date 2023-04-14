@@ -9,7 +9,7 @@ import jakarta.interceptor.InvocationContext;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.quarkiverse.bucket4j.runtime.resolver.IdentityKeyResolver;
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 
 @RateLimited
 @Interceptor
@@ -20,7 +20,7 @@ public class RateLimitedInterceptor {
     BucketPodStorage bucketPodStorage;
 
     @Inject
-    IdentityKeyResolverStorage identityKeyResolverStorage;
+    IdentityResolverStorage identityKeyResolverStorage;
 
     @Inject
     ProxyManager<String> proxyManager;
@@ -37,7 +37,7 @@ public class RateLimitedInterceptor {
         throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill());
     }
 
-    private Bucket getBucket(BucketPod pod, IdentityKeyResolver keyResolver) {
+    private Bucket getBucket(BucketPod pod, IdentityResolver keyResolver) {
         return proxyManager.builder().build(pod.getId() + "_" + keyResolver.getIdentityKey(), pod.getConfiguration());
     }
 }

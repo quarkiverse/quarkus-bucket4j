@@ -25,8 +25,8 @@ public class RateLimitInterceptorTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.limits.group1[0].max-usage: 1\n" +
-                            "quarkus.rate-limiter.limits.group1[0].period: 1S"), "application.properties"));
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].max-usage: 1\n" +
+                            "quarkus.rate-limiter.buckets.group1[0].period: 1S"), "application.properties"));
 
     @Inject
     RateLimitedMethods methods;
@@ -47,12 +47,12 @@ public class RateLimitInterceptorTest {
     @ApplicationScoped
     public static class RateLimitedMethods {
 
-        @RateLimited(limitsKey = "group1")
+        @RateLimited(bucket = "group1")
         public String limited() {
             return "LIMITED";
         }
 
-        @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+        @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
         public String limitedByIp() {
             return "LIMITED";
         }

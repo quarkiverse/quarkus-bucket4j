@@ -25,10 +25,10 @@ public class BucketPodsTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.limits.group1[0].max-usage: 10\n" +
-                            "quarkus.rate-limiter.limits.group1[0].period: 1S\n" +
-                            "quarkus.rate-limiter.limits.group1[1].max-usage: 100\n" +
-                            "quarkus.rate-limiter.limits.group1[1].period: 5M\n"), "application.properties"));
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].max-usage: 10\n" +
+                            "quarkus.rate-limiter.buckets.group1[0].period: 1S\n" +
+                            "quarkus.rate-limiter.buckets.group1[1].max-usage: 100\n" +
+                            "quarkus.rate-limiter.buckets.group1[1].period: 5M\n"), "application.properties"));
 
     @Inject
     BucketPodStorage storage;
@@ -53,7 +53,7 @@ public class BucketPodsTest {
     @ApplicationScoped
     public static class RateLimitedMethods {
 
-        @RateLimited(limitsKey = "group1")
+        @RateLimited(bucket = "group1")
         public String limited() {
             return "LIMITED";
         }
