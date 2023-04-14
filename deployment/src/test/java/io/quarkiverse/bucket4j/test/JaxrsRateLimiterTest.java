@@ -1,24 +1,23 @@
 package io.quarkiverse.bucket4j.test;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.ContextNotActiveException;
-import jakarta.inject.Inject;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
 
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
-public class RateLimitInterceptorTest {
+public class JaxrsRateLimiterTest {
 
     // Start unit test with your extension loaded
     @RegisterExtension
@@ -28,30 +27,28 @@ public class RateLimitInterceptorTest {
                     .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].max-usage: 1\n" +
                             "quarkus.rate-limiter.buckets.group1[0].period: 1S"), "application.properties"));
 
-    @Inject
-    RateLimitedMethods methods;
-
     @Test
-    public void rateLimitExceptionIsThrownIfQuotaIsExceeded() {
-        methods.limited();
-        RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
-        assertThat(rateLimitException.getWaitTimeInNanoSeconds())
-                .isBetween(800_000_000L, 1000_000_000L);
+    public void status429IsReturnedIfQuotaIsExceeded() {
+
+        given()
+                .when()
+                .get("/test")
+                .then()
+                .statusCode(200)
+                .body(is("LIMITED"));
+
+        given()
+                .when().get("/test")
+                .then()
+                .statusCode(429);
+
     }
 
-    @Test
-    public void contextNotActiveExceptionIsThrownIfIpResolverIsUsedOutsideRequestContext() {
-        Assertions.assertThrows(ContextNotActiveException.class, () -> methods.limitedByIp());
-    }
-
-    @ApplicationScoped
+    @RequestScoped
+    @Path("/test")
     public static class RateLimitedMethods {
 
-        @RateLimited(bucket = "group1")
-        public String limited() {
-            return "LIMITED";
-        }
-
+        @GET
         @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
         public String limitedByIp() {
             return "LIMITED";

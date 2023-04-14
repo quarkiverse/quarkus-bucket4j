@@ -2,13 +2,13 @@ package io.quarkiverse.bucket4j.runtime;
 
 public class RateLimitException extends RuntimeException {
 
-    private final long waitTimeInNanoSeconds;
+    private final long waitTimeInMilliSeconds;
 
     RateLimitException(long waitTimeInNanoSeconds) {
-        this.waitTimeInNanoSeconds = waitTimeInNanoSeconds;
+        this.waitTimeInMilliSeconds = waitTimeInNanoSeconds;
     }
 
-    public long getWaitTimeInNanoSeconds() {
-        return waitTimeInNanoSeconds;
+    public long getWaitTimeInMilliSeconds() {
+        return waitTimeInMilliSeconds;
     }
 }
