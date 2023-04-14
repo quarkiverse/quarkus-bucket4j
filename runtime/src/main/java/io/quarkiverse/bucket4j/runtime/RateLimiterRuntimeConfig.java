@@ -1,8 +1,12 @@
 package io.quarkiverse.bucket4j.runtime;
 
+import java.time.Duration;
+
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
+import io.quarkus.runtime.configuration.DurationConverter;
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
 
 @ConfigMapping(prefix = "quarkus.rate-limiter")
@@ -20,4 +24,12 @@ public interface RateLimiterRuntimeConfig {
      */
     @WithDefault("1000")
     int maxSize();
+
+    /**
+     * Duration during which the bucket is kept after last refill if untouched
+     */
+    @WithDefault("1H")
+    @WithConverter(DurationConverter.class)
+    Duration keepAfterRefill();
+
 }
