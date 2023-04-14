@@ -2,6 +2,7 @@ package io.quarkiverse.bucket4j.test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.ws.rs.GET;
@@ -40,7 +41,8 @@ public class JaxrsRateLimiterTest {
         given()
                 .when().get("/test")
                 .then()
-                .statusCode(429);
+                .statusCode(429)
+                .header("Retry-After", is(notNullValue()));
 
     }
 

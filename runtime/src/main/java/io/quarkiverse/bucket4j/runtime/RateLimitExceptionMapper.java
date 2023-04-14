@@ -10,6 +10,7 @@ public class RateLimitExceptionMapper implements ExceptionMapper<RateLimitExcept
     @Override
     public Response toResponse(RateLimitException e) {
         return Response.status(Response.Status.TOO_MANY_REQUESTS)
+                .header("Retry-After", e.getWaitTimeInMilliSeconds() / 1000)
                 .build();
     }
 }
