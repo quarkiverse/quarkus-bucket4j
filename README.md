@@ -10,7 +10,8 @@ This extension allow you to control the request rate sent to your application by
 
 ## Getting Started
 
-Read the full documentation [TODO].
+Read the [full documentation](https://quarkiverse.github.io/quarkiverse-docs/quarkus-bucket4j/dev/index.html).
+
 
 ### Usage
 
