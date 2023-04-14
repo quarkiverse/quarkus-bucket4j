@@ -8,7 +8,6 @@ import jakarta.inject.Inject;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -25,10 +24,13 @@ public class BucketPodsTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].permitted-uses: 10\n" +
-                            "quarkus.rate-limiter.buckets.group1[0].period: 1S\n" +
-                            "quarkus.rate-limiter.buckets.group1[1].permitted-uses: 100\n" +
-                            "quarkus.rate-limiter.buckets.group1[1].period: 5M\n"), "application.properties"));
+                    .addClass(RateLimitedClass.class)
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 10\n" +
+                            "quarkus.rate-limiter.buckets.group1.limits[0].period: 1S\n" +
+                            "quarkus.rate-limiter.buckets.group1.limits[1].permitted-uses: 100\n" +
+                            "quarkus.rate-limiter.buckets.group1.limits[1].period: 5M\n" +
+                            "quarkus.rate-limiter.buckets.group2.limits[0].permitted-uses: 1\n" +
+                            "quarkus.rate-limiter.buckets.group2.limits[0].period: 1S\n"), "application.properties"));
 
     @Inject
     BucketPodStorage storage;
@@ -36,7 +38,8 @@ public class BucketPodsTest {
     @Test
     public void podIsCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
         BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("limited"));
-        Assertions.assertNotNull(pod);
+        assertThat(pod).isNotNull();
+        assertThat(pod.getId()).isEqualTo("group1");
         BucketConfiguration configuration = pod.getConfiguration();
         assertThat(configuration.getBandwidths())
                 .hasSize(2);
@@ -50,6 +53,17 @@ public class BucketPodsTest {
                 .isEqualTo(300_000_000_000L);
     }
 
+    @Test
+    public void podIsCorrectlyCreatedForAnnotatedClass() throws NoSuchMethodException {
+        BucketPod pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limited"));
+        assertThat(pod).isNotNull();
+        assertThat(pod.getId()).isEqualTo("group1");
+
+        pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limitedAnnotated"));
+        assertThat(pod).isNotNull();
+        assertThat(pod.getId()).isEqualTo("group2");
+    }
+
     @ApplicationScoped
     public static class RateLimitedMethods {
 
@@ -58,5 +72,18 @@ public class BucketPodsTest {
             return "LIMITED";
         }
 
+    }
+
+    @ApplicationScoped
+    @RateLimited(bucket = "group1")
+    public static class RateLimitedClass {
+        public String limited() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "group2")
+        public String limitedAnnotated() {
+            return "LIMITED";
+        }
     }
 }

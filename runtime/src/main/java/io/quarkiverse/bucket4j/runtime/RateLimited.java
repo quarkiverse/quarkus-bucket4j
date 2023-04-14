@@ -23,8 +23,8 @@ public @interface RateLimited {
     /**
      * This is the bucket identity for this method.
      * A configuration key that hold the limits for this bucket must exist
-     * If multiple methods share the same bucket, the number of allowed requests
-     * is shared for all them
+     * If multiple methods share the same bucket, the number of permitted uses
+     * is shared among all them
      */
     @Nonbinding
     String bucket() default DEFAULT_BUCKET;
