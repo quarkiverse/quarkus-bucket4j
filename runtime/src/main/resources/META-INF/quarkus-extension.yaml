@@ -7,7 +7,7 @@ metadata:
     - rate-limiter
     - limiter
     - throttler
-  #  guide: https://quarkiverse.github.io/quarkiverse-docs/bucket4j/dev/ # To create and publish this guide, see https://github.com/quarkiverse/quarkiverse/wiki#documenting-your-extension
+  guide: https://quarkiverse.github.io/quarkiverse-docs/quarkus-bucket4j/dev/index.html
   categories:
     - "security"
   status: "experimental"
