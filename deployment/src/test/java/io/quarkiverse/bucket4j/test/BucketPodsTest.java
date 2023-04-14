@@ -25,9 +25,9 @@ public class BucketPodsTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].max-usage: 10\n" +
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].permitted-uses: 10\n" +
                             "quarkus.rate-limiter.buckets.group1[0].period: 1S\n" +
-                            "quarkus.rate-limiter.buckets.group1[1].max-usage: 100\n" +
+                            "quarkus.rate-limiter.buckets.group1[1].permitted-uses: 100\n" +
                             "quarkus.rate-limiter.buckets.group1[1].period: 5M\n"), "application.properties"));
 
     @Inject

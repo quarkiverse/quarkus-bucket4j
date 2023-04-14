@@ -29,10 +29,11 @@ public interface RateLimiterConfig {
      */
     @ConfigGroup
     interface Limit {
+
         /**
          * Number of usage per period
          */
-        int maxUsage();
+        int permittedUses();
 
         /**
          * evaluation period

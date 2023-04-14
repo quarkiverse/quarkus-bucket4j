@@ -23,7 +23,7 @@ public class DisabledRateLimiterTest {
                     .addClass(RateLimitedMethods.class)
                     .addAsResource(new StringAsset(
                             "quarkus.rate-limiter.enabled: false\n" +
-                                    "quarkus.rate-limiter.buckets.group1[0].max-usage: 1\n" +
+                                    "quarkus.rate-limiter.buckets.group1[0].permitted-uses: 1\n" +
                                     "quarkus.rate-limiter.buckets.group1[0].period: 1S"),
                             "application.properties"));
 

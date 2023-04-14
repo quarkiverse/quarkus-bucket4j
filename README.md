@@ -29,10 +29,10 @@ And add a limit group using the same limitsKey in the configuration:
 
 ``` properties
 # burst protection
-quarkus.rate-limiter.buckets.group1[0].max-usage: 10
+quarkus.rate-limiter.buckets.group1[0].permitted-uses: 10
 quarkus.rate-limiter.buckets.group1[0].period: 1S
 # fair use
-quarkus.rate-limiter.buckets.group1[1].max-usage: 100
+quarkus.rate-limiter.buckets.group1[1].permitted-uses: 100
 quarkus.rate-limiter.buckets.group1[1].period: 5M
 ```
 

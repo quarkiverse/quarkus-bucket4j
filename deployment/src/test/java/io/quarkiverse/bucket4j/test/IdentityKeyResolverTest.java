@@ -24,7 +24,7 @@ public class IdentityKeyResolverTest {
     static final QuarkusUnitTest unitTest = new QuarkusUnitTest()
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].max-usage: 10\n" +
+                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1[0].permitted-uses: 10\n" +
                             "quarkus.rate-limiter.buckets.group1[0].period: 1S\n"), "application.properties"));
 
     @Inject
