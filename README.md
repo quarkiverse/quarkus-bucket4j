@@ -17,7 +17,7 @@ Annotate the method that need to be throttled with @RateLimited
 @ApplicationScoped
 public static class RateLimitedMethods {
 
-    @RateLimited(limitsKey = "group1")
+    @RateLimited(bucket = "group1")
     public String limited() {
         return "LIMITED";
     }
@@ -44,7 +44,7 @@ If you want to enable throttling per user, simply specify an IdentityKeyResolver
 @ApplicationScoped
 public static class RateLimitedMethods {
 
-    @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+    @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
     public String limitedByIp() {
         return "LIMITED";
     }

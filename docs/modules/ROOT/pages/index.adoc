@@ -80,7 +80,7 @@ The default one is the ConstantResolver, which will cause the segmentation to be
 @ApplicationScoped
 public static class RateLimitedMethods {
 
-    @RateLimited(limitsKey = "group1", identityResolver = IpResolver.class)
+    @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
     public String limitedByIp() {
         return "LIMITED";
     }
