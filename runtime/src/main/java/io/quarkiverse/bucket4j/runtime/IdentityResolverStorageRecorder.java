@@ -10,12 +10,6 @@ import io.quarkus.runtime.annotations.Recorder;
 @Recorder
 public class IdentityResolverStorageRecorder {
 
-    private final RateLimiterConfig config;
-
-    public IdentityResolverStorageRecorder(RateLimiterConfig config) {
-        this.config = config;
-    }
-
     Map<MethodDescription, Class<? extends IdentityResolver>> resolvers = new HashMap<>();
 
     public void registerMethod(MethodDescription description, String className) {
