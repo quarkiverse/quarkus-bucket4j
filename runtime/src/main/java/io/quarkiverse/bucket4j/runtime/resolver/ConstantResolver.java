@@ -8,8 +8,10 @@ import jakarta.inject.Singleton;
  */
 @Singleton
 public class ConstantResolver implements IdentityResolver {
+    private static final String KEY = "io.quarkiverse.bucket4j.runtime.resolver.CONSTANT";
+
     @Override
     public String getIdentityKey() {
-        return "io.quarkiverse.bucket4j.runtime.resolver.CONSTANT";
+        return KEY;
     }
 }
