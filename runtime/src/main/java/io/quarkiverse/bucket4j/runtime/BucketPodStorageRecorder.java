@@ -6,6 +6,7 @@ import java.util.Map;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConfigurationBuilder;
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
@@ -19,7 +20,7 @@ public class BucketPodStorageRecorder {
         this.config = config;
     }
 
-    private BucketPod getBucketPod(String key) {
+    private BucketPod getBucketPod(String key, String resolverClassName) {
         RateLimiterConfig.Bucket bucket = config.buckets().get(key);
         if (bucket == null) {
             throw new IllegalStateException("missing limits config for " + key);
@@ -29,12 +30,18 @@ public class BucketPodStorageRecorder {
         for (RateLimiterConfig.Limit limit : bucket.limits()) {
             builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
         }
-        return new BucketPod(key, builder.build());
+        try {
+            return new BucketPod(key, builder.build(),
+                    (Class<? extends IdentityResolver>) getClass().getClassLoader().loadClass(resolverClassName));
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     public void registerMethod(MethodDescription description,
-            String key) {
-        pods.putIfAbsent(description, getBucketPod(key));
+            String key, String resolverClassName) {
+        pods.putIfAbsent(description, getBucketPod(key, resolverClassName));
     }
 
     public RuntimeValue<BucketPodStorage> create() {
