@@ -15,6 +15,7 @@ import io.github.bucket4j.BucketConfiguration;
 import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
+import io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class BucketPodsTest {
@@ -51,6 +52,9 @@ public class BucketPodsTest {
                 .isEqualTo(100L);
         assertThat(configuration.getBandwidths()[1].getRefillPeriodNanos())
                 .isEqualTo(300_000_000_000L);
+        assertThat(pod.getIdentityResolver())
+                .isNotNull()
+                .isOfAnyClassIn(ConstantResolver.class);
     }
 
     @Test
@@ -58,10 +62,15 @@ public class BucketPodsTest {
         BucketPod pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limited"));
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("group1");
-
+        assertThat(pod.getIdentityResolver())
+                .isNotNull()
+                .isOfAnyClassIn(ConstantResolver.class);
         pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limitedAnnotated"));
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("group2");
+        assertThat(pod.getIdentityResolver())
+                .isNotNull()
+                .isOfAnyClassIn(ConstantResolver.class);
     }
 
     @ApplicationScoped

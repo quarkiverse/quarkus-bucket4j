@@ -11,7 +11,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 
 @RateLimited
 @Interceptor
@@ -20,9 +19,6 @@ public class RateLimitedInterceptor {
 
     @Inject
     BucketPodStorage bucketPodStorage;
-
-    @Inject
-    IdentityResolverStorage identityKeyResolverStorage;
 
     @Inject
     ProxyManager<String> proxyManager;
@@ -35,8 +31,7 @@ public class RateLimitedInterceptor {
         if (!enabled) {
             return context.proceed();
         }
-        Bucket bucket = getBucket(bucketPodStorage.getBucketPod(context.getMethod()),
-                identityKeyResolverStorage.getIdentityKeyResolver(context.getMethod()));
+        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket(proxyManager);
         ConsumptionProbe consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
         if (consumptionProbe.isConsumed()) {
             return context.proceed();
@@ -44,7 +39,4 @@ public class RateLimitedInterceptor {
         throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill() / 1000L);
     }
 
-    private Bucket getBucket(BucketPod pod, IdentityResolver keyResolver) {
-        return proxyManager.builder().build(pod.getId() + "_" + keyResolver.getIdentityKey(), pod.getConfiguration());
-    }
 }

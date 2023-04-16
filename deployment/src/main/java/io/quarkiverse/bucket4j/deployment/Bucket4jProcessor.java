@@ -1,9 +1,7 @@
 package io.quarkiverse.bucket4j.deployment;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Priorities;
@@ -13,12 +11,9 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
 
-import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.DefaultProxyManagerProducer;
-import io.quarkiverse.bucket4j.runtime.IdentityResolverStorage;
-import io.quarkiverse.bucket4j.runtime.IdentityResolverStorageRecorder;
 import io.quarkiverse.bucket4j.runtime.MethodDescription;
 import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimitExceptionMapper;
@@ -38,7 +33,6 @@ import io.quarkus.deployment.annotations.Record;
 import io.quarkus.deployment.builditem.FeatureBuildItem;
 import io.quarkus.resteasy.common.spi.ResteasyJaxrsProviderBuildItem;
 import io.quarkus.resteasy.reactive.spi.ExceptionMapperBuildItem;
-import io.quarkus.runtime.RuntimeValue;
 
 class Bucket4jProcessor {
 
@@ -94,75 +88,33 @@ class Bucket4jProcessor {
             BucketPodStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
-        Map<MethodInfo, RuntimeValue<BucketPod>> perMethodPods = new HashMap<>();
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
-                perMethodPods.put(methodInfo, recorder.getBucketPod(instance.value("bucket").asString()));
+                String identityResolver = instance
+                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
+                recorder.registerMethod(createDescription(methodInfo),
+                        instance.value("bucket").asString(), identityResolver);
             }
         }
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
-                RuntimeValue<BucketPod> bucket = recorder.getBucketPod(instance.value("bucket").asString());
                 List<MethodInfo> methods = target.asClass().methods();
                 for (MethodInfo methodInfo : methods) {
-                    perMethodPods.computeIfAbsent(methodInfo, (k) -> bucket);
+                    String identityResolver = instance
+                            .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
+                    recorder.registerMethod(createDescription(methodInfo),
+                            instance.value("bucket").asString(), identityResolver);
                 }
             }
-        }
-
-        for (Map.Entry<MethodInfo, RuntimeValue<BucketPod>> methodEntry : perMethodPods
-                .entrySet()) {
-
-            recorder.registerMethod(createDescription(methodEntry.getKey()),
-                    methodEntry.getValue());
         }
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(BucketPodStorage.class)
-                        .scope(ApplicationScoped.class)
-                        .unremovable()
-                        .runtimeValue(recorder.create())
-                        .done());
-    }
-
-    @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
-    void gatherIdentityKeyResolvers(BeanArchiveIndexBuildItem beanArchiveBuildItem,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            IdentityResolverStorageRecorder recorder) {
-
-        Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
-
-        for (AnnotationInstance instance : instances) {
-
-            AnnotationTarget target = instance.target();
-            if (target.kind() == AnnotationTarget.Kind.METHOD) {
-                MethodInfo methodInfo = target.asMethod();
-                String identityResolver = instance
-                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
-                recorder.registerMethod(createDescription(methodInfo), identityResolver);
-            }
-        }
-
-        for (AnnotationInstance instance : instances) {
-            AnnotationTarget target = instance.target();
-            if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
-                String identityResolver = instance
-                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
-                List<MethodInfo> methods = target.asClass().methods();
-                for (MethodInfo methodInfo : methods) {
-                    recorder.registerMethod(createDescription(methodInfo), identityResolver);
-                }
-            }
-        }
-
-        syntheticBeans.produce(
-                SyntheticBeanBuildItem.configure(IdentityResolverStorage.class)
                         .scope(ApplicationScoped.class)
                         .unremovable()
                         .runtimeValue(recorder.create())
