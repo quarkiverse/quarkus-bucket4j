@@ -19,7 +19,7 @@ public class BucketPodStorageRecorder {
         this.config = config;
     }
 
-    public RuntimeValue<BucketPod> getBucketPod(String key) {
+    private BucketPod getBucketPod(String key) {
         RateLimiterConfig.Bucket bucket = config.buckets().get(key);
         if (bucket == null) {
             throw new IllegalStateException("missing limits config for " + key);
@@ -29,12 +29,12 @@ public class BucketPodStorageRecorder {
         for (RateLimiterConfig.Limit limit : bucket.limits()) {
             builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
         }
-        return new RuntimeValue<>(new BucketPod(key, builder.build()));
+        return new BucketPod(key, builder.build());
     }
 
     public void registerMethod(MethodDescription description,
-            RuntimeValue<BucketPod> bucketPod) {
-        pods.put(description, bucketPod.getValue());
+            String key) {
+        pods.putIfAbsent(description, getBucketPod(key));
     }
 
     public RuntimeValue<BucketPodStorage> create() {

@@ -70,7 +70,7 @@ class Bucket4jProcessor {
 
     @BuildStep
     void exceptionMapper(BuildProducer<ResteasyJaxrsProviderBuildItem> resteasyJaxrsProviderBuildItemBuildProducer,
-            BuildProducer<ExceptionMapperBuildItem> exceptionMapperBuildItemBuildProducer) {
+                         BuildProducer<ExceptionMapperBuildItem> exceptionMapperBuildItemBuildProducer) {
 
         resteasyJaxrsProviderBuildItemBuildProducer
                 .produce(new ResteasyJaxrsProviderBuildItem(RateLimitExceptionMapper.class.getName()));
@@ -90,36 +90,29 @@ class Bucket4jProcessor {
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     void gatherRateLimitCheck(BeanArchiveIndexBuildItem beanArchiveBuildItem,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            BucketPodStorageRecorder recorder) {
+                              BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+                              BucketPodStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
-        Map<MethodInfo, RuntimeValue<BucketPod>> perMethodPods = new HashMap<>();
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
-                perMethodPods.put(methodInfo, recorder.getBucketPod(instance.value("bucket").asString()));
+                recorder.registerMethod(createDescription(methodInfo),
+                        instance.value("bucket").asString());
             }
         }
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
-                RuntimeValue<BucketPod> bucket = recorder.getBucketPod(instance.value("bucket").asString());
                 List<MethodInfo> methods = target.asClass().methods();
                 for (MethodInfo methodInfo : methods) {
-                    perMethodPods.computeIfAbsent(methodInfo, (k) -> bucket);
+                    recorder.registerMethod(createDescription(methodInfo),
+                            instance.value("bucket").asString());
                 }
             }
-        }
-
-        for (Map.Entry<MethodInfo, RuntimeValue<BucketPod>> methodEntry : perMethodPods
-                .entrySet()) {
-
-            recorder.registerMethod(createDescription(methodEntry.getKey()),
-                    methodEntry.getValue());
         }
 
         syntheticBeans.produce(
@@ -133,8 +126,8 @@ class Bucket4jProcessor {
     @BuildStep
     @Record(ExecutionTime.STATIC_INIT)
     void gatherIdentityKeyResolvers(BeanArchiveIndexBuildItem beanArchiveBuildItem,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            IdentityResolverStorageRecorder recorder) {
+                                    BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
+                                    IdentityResolverStorageRecorder recorder) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
 
