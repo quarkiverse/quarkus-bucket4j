@@ -26,12 +26,19 @@ public class BucketPodsTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
                     .addClass(RateLimitedClass.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 10\n" +
-                            "quarkus.rate-limiter.buckets.group1.limits[0].period: 1S\n" +
-                            "quarkus.rate-limiter.buckets.group1.limits[1].permitted-uses: 100\n" +
-                            "quarkus.rate-limiter.buckets.group1.limits[1].period: 5M\n" +
-                            "quarkus.rate-limiter.buckets.group2.limits[0].permitted-uses: 1\n" +
-                            "quarkus.rate-limiter.buckets.group2.limits[0].period: 1S\n"), "application.properties"));
+                    .addAsResource(new StringAsset(
+                            "quarkus.rate-limiter.buckets.annotated-method.shared: true\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method.limits[0].permitted-uses: 10\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method.limits[1].permitted-uses: 100\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method.limits[1].period: 5M\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-class.shared: true\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-class.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-class.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.shared: false\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].period: 1S\n"),
+                            "application.properties"));
 
     @Inject
     BucketPodStorage storage;
@@ -40,7 +47,7 @@ public class BucketPodsTest {
     public void podIsCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
         BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("limited"));
         assertThat(pod).isNotNull();
-        assertThat(pod.getId()).isEqualTo("group1");
+        assertThat(pod.getId()).isEqualTo("annotated-method");
         BucketConfiguration configuration = pod.getConfiguration();
         assertThat(configuration.getBandwidths())
                 .hasSize(2);
@@ -58,16 +65,23 @@ public class BucketPodsTest {
     }
 
     @Test
+    public void podIsCorrectlyCreatedForIsolatedMethods() throws NoSuchMethodException {
+        BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("isolatedMethod"));
+        assertThat(pod).isNotNull();
+        assertThat(pod.getId()).isEqualTo("isolated-method-1867211146");
+    }
+
+    @Test
     public void podIsCorrectlyCreatedForAnnotatedClass() throws NoSuchMethodException {
         BucketPod pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limited"));
         assertThat(pod).isNotNull();
-        assertThat(pod.getId()).isEqualTo("group1");
+        assertThat(pod.getId()).isEqualTo("annotated-class");
         assertThat(pod.getIdentityResolver())
                 .isNotNull()
                 .isOfAnyClassIn(ConstantResolver.class);
         pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limitedAnnotated"));
         assertThat(pod).isNotNull();
-        assertThat(pod.getId()).isEqualTo("group2");
+        assertThat(pod.getId()).isEqualTo("annotated-method");
         assertThat(pod.getIdentityResolver())
                 .isNotNull()
                 .isOfAnyClassIn(ConstantResolver.class);
@@ -76,21 +90,26 @@ public class BucketPodsTest {
     @ApplicationScoped
     public static class RateLimitedMethods {
 
-        @RateLimited(bucket = "group1")
+        @RateLimited(bucket = "annotated-method")
         public String limited() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "isolated-method")
+        public String isolatedMethod() {
             return "LIMITED";
         }
 
     }
 
     @ApplicationScoped
-    @RateLimited(bucket = "group1")
+    @RateLimited(bucket = "annotated-class")
     public static class RateLimitedClass {
         public String limited() {
             return "LIMITED";
         }
 
-        @RateLimited(bucket = "group2")
+        @RateLimited(bucket = "annotated-method")
         public String limitedAnnotated() {
             return "LIMITED";
         }

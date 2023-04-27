@@ -11,6 +11,7 @@ import io.quarkus.runtime.annotations.ConfigRoot;
 import io.quarkus.runtime.configuration.DurationConverter;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithConverter;
+import io.smallrye.config.WithDefault;
 
 @ConfigMapping(prefix = "quarkus.rate-limiter")
 @ConfigRoot(phase = ConfigPhase.BUILD_AND_RUN_TIME_FIXED)
@@ -19,7 +20,6 @@ public interface RateLimiterConfig {
     /**
      * represent a group of limit applied to a method
      * identified by the bucket id
-     * If multiple methods share the same bucket id, the permitted uses are shared
      */
     @ConfigDocMapKey("bucket-id")
     Map<String, Bucket> buckets();
@@ -35,6 +35,12 @@ public interface RateLimiterConfig {
          */
         List<Limit> limits();
 
+        /**
+         * If true, permitted uses are shared for all methods using the same bucket id.
+         * If false, each method has its own quota.
+         */
+        @WithDefault("false")
+        Boolean shared();
     }
 
     /**

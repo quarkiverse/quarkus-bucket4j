@@ -26,10 +26,18 @@ public class RateLimiterTest {
             .setArchiveProducer(() -> ShrinkWrap.create(JavaArchive.class)
                     .addClass(RateLimitedMethods.class)
                     .addClass(RateLimitedClass.class)
-                    .addAsResource(new StringAsset("quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 1\n" +
-                            "quarkus.rate-limiter.buckets.group1.limits[0].period: 1S\n" +
-                            "quarkus.rate-limiter.buckets.group2.limits[0].permitted-uses: 1\n" +
-                            "quarkus.rate-limiter.buckets.group2.limits[0].period: 1S"), "application.properties"));
+                    .addAsResource(
+                            new StringAsset("quarkus.rate-limiter.buckets.annotated-method.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-class.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-class.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.shared: false\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.shared-method.shared: true\n" +
+                                    "quarkus.rate-limiter.buckets.shared-method.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.shared-method.limits[0].period: 1S\n"),
+                            "application.properties"));
 
     @Inject
     RateLimitedMethods methods;
@@ -42,6 +50,18 @@ public class RateLimiterTest {
         RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
         assertThat(rateLimitException.getWaitTimeInMilliSeconds())
                 .isBetween(800_000L, 1000_000L);
+    }
+
+    @Test
+    public void quotaIsIsolatedIfSharingIsDisabled() {
+        methods.isolated();
+        Assertions.assertDoesNotThrow(() -> methods.isolated("param"));
+    }
+
+    @Test
+    public void quotaIsSharedIfSharingIsEnabled() {
+        methods.shared();
+        Assertions.assertThrows(RateLimitException.class, () -> methods.otherShared());
     }
 
     @Test
@@ -60,12 +80,32 @@ public class RateLimiterTest {
     @ApplicationScoped
     public static class RateLimitedMethods {
 
-        @RateLimited(bucket = "group1")
+        @RateLimited(bucket = "annotated-method")
         public String limited() {
             return "LIMITED";
         }
 
-        @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
+        @RateLimited(bucket = "isolated-method")
+        public String isolated() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "isolated-method")
+        public String isolated(String param) {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "shared-method")
+        public String shared() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "shared-method")
+        public String otherShared() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "annotated-method", identityResolver = IpResolver.class)
         public String limitedByIp() {
             return "LIMITED";
         }
@@ -73,7 +113,7 @@ public class RateLimiterTest {
     }
 
     @ApplicationScoped
-    @RateLimited(bucket = "group2")
+    @RateLimited(bucket = "annotated-class")
     public static class RateLimitedClass {
         public String limited() {
             return "LIMITED";
