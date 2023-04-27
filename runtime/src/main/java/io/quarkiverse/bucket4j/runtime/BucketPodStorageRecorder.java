@@ -20,7 +20,7 @@ public class BucketPodStorageRecorder {
         this.config = config;
     }
 
-    private BucketPod getBucketPod(String key, String resolverClassName) {
+    private BucketPod getBucketPod(MethodDescription methodDescription, String key, String resolverClassName) {
         RateLimiterConfig.Bucket bucket = config.buckets().get(key);
         if (bucket == null) {
             throw new IllegalStateException("missing limits config for " + key);
@@ -30,8 +30,9 @@ public class BucketPodStorageRecorder {
         for (RateLimiterConfig.Limit limit : bucket.limits()) {
             builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
         }
+        String id = bucket.shared() ? key : key + methodDescription.hashCode();
         try {
-            return new BucketPod(key, builder.build(),
+            return new BucketPod(id, builder.build(),
                     (Class<? extends IdentityResolver>) getClass().getClassLoader().loadClass(resolverClassName));
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(e);
@@ -41,7 +42,7 @@ public class BucketPodStorageRecorder {
 
     public void registerMethod(MethodDescription description,
             String key, String resolverClassName) {
-        pods.putIfAbsent(description, getBucketPod(key, resolverClassName));
+        pods.putIfAbsent(description, getBucketPod(description, key, resolverClassName));
     }
 
     public RuntimeValue<BucketPodStorage> create() {

@@ -84,7 +84,19 @@ quarkus:
 ----
 
 The bucket can contain multiple limits that will all be enforced.
-If multiple methods share the same bucket id, the number of allowed requests is shared for all them.
+
+=== Bucket Sharing
+
+By default, if multiple methods share the same bucket id, each method has its own quota.
+You can change this behaviour by enabling the shared option in the configuration.
+
+[source,properties]
+----
+# burst protection
+quarkus.rate-limiter.buckets.group1.shared: true
+quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 10
+quarkus.rate-limiter.buckets.group1.limits[0].period: 1S
+----
 
 === Population Segmentation
 
