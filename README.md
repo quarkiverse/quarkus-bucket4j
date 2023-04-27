@@ -8,6 +8,10 @@
 Bucket4J is a Java rate-limiting library based on the token-bucket algorithm. Bucket4j is a thread-safe library that can be used in either a standalone JVM application, or a clustered environment. It also supports in-memory or distributed caching via the JCache (JSR107) specification.
 This extension allow you to control the request rate sent to your application by using a dead simple API.
 
+## Compatibility
+
+v1.x is compatible with quarkus 3+
+
 ## Getting Started
 
 Read the [full documentation](https://quarkiverse.github.io/quarkiverse-docs/quarkus-bucket4j/dev/index.html).
