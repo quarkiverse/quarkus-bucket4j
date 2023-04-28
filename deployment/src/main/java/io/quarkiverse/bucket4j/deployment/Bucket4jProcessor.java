@@ -2,12 +2,14 @@ package io.quarkiverse.bucket4j.deployment;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Priorities;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
 
@@ -37,7 +39,6 @@ import io.quarkus.resteasy.reactive.spi.ExceptionMapperBuildItem;
 class Bucket4jProcessor {
 
     public static final DotName RATE_LIMITED_INTERCEPTOR = DotName.createSimple(RateLimitedInterceptor.class.getName());
-
     public static final DotName RATE_LIMITED = DotName.createSimple(RateLimited.class.getName());
 
     private static final String FEATURE = "bucket4j";
@@ -93,10 +94,8 @@ class Bucket4jProcessor {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
                 MethodInfo methodInfo = target.asMethod();
-                String identityResolver = instance
-                        .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
                 recorder.registerMethod(createDescription(methodInfo),
-                        instance.value("bucket").asString(), identityResolver);
+                        instance.value("bucket").asString(), getIdentityResolver(instance));
             }
         }
 
@@ -105,10 +104,8 @@ class Bucket4jProcessor {
             if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
                 List<MethodInfo> methods = target.asClass().methods();
                 for (MethodInfo methodInfo : methods) {
-                    String identityResolver = instance
-                            .valueWithDefault(beanArchiveBuildItem.getIndex(), "identityResolver").asClass().name().toString();
                     recorder.registerMethod(createDescription(methodInfo),
-                            instance.value("bucket").asString(), identityResolver);
+                            instance.value("bucket").asString(), getIdentityResolver(instance));
                 }
             }
         }
@@ -119,6 +116,10 @@ class Bucket4jProcessor {
                         .unremovable()
                         .runtimeValue(recorder.create())
                         .done());
+    }
+
+    private Optional<String> getIdentityResolver(AnnotationInstance instance) {
+        return Optional.ofNullable(instance.value("identityResolver")).map(AnnotationValue::asString);
     }
 
     private MethodDescription createDescription(MethodInfo method) {

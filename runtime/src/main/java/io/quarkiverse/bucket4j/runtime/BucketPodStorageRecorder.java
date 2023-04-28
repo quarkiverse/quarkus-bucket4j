@@ -2,6 +2,7 @@ package io.quarkiverse.bucket4j.runtime;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
@@ -20,20 +21,22 @@ public class BucketPodStorageRecorder {
         this.config = config;
     }
 
-    private BucketPod getBucketPod(MethodDescription methodDescription, String key, String resolverClassName) {
-        RateLimiterConfig.Bucket bucket = config.buckets().get(key);
-        if (bucket == null) {
+    private BucketPod getBucketPod(MethodDescription methodDescription, String key,
+            Optional<String> identityResolverClassName) {
+        RateLimiterConfig.Bucket bucketConfig = config.buckets().get(key);
+        if (bucketConfig == null) {
             throw new IllegalStateException("missing limits config for " + key);
         }
 
         ConfigurationBuilder builder = BucketConfiguration.builder();
-        for (RateLimiterConfig.Limit limit : bucket.limits()) {
+        for (RateLimiterConfig.Limit limit : bucketConfig.limits()) {
             builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
         }
-        String id = bucket.shared() ? key : key + methodDescription.hashCode();
+        String id = bucketConfig.shared() ? key : key + methodDescription.hashCode();
         try {
             return new BucketPod(id, builder.build(),
-                    (Class<? extends IdentityResolver>) getClass().getClassLoader().loadClass(resolverClassName));
+                    (Class<? extends IdentityResolver>) Thread.currentThread().getContextClassLoader()
+                            .loadClass(identityResolverClassName.orElse(bucketConfig.identityResolver())));
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
@@ -41,8 +44,8 @@ public class BucketPodStorageRecorder {
     }
 
     public void registerMethod(MethodDescription description,
-            String key, String resolverClassName) {
-        pods.putIfAbsent(description, getBucketPod(description, key, resolverClassName));
+            String key, Optional<String> identityResolverClassName) {
+        pods.putIfAbsent(description, getBucketPod(description, key, identityResolverClassName));
     }
 
     public RuntimeValue<BucketPodStorage> create() {
