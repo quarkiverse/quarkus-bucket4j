@@ -100,7 +100,8 @@ quarkus.rate-limiter.buckets.group1.limits[0].period: 1S
 
 === Population Segmentation
 
-If you want to enable throttling per user, simply specify an IdentityKeyResolver in the RateLimited annotation.
+If you want to perform the throttling per user, simply specify an IdentityKeyResolver either in the bucket config or in the RateLimited annotation.
+If a value is specified in the annotation, it will take precedence over the config.
 The default one is the ConstantResolver, which will cause the segmentation to be disabled.
 
 [source,java]

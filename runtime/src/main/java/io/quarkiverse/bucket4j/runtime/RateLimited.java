@@ -30,11 +30,12 @@ public @interface RateLimited {
     String bucket() default DEFAULT_BUCKET;
 
     /**
-     * This is the resolver for the segmentation key.
-     * there are two provided strategies you can use:
+     * Identity resolver allow to segment the population.
+     * Each resolved identity key will have its own quota.
+     * There are two provided strategies you can use:
      * ConstantResolver, disable the segmentation completely
      * IpResolver, segment by source Ip address
-     * Or you can implement a custom resolver, which must be a CDI bean
+     * Or you can implement a custom resolver, which must be a valid CDI bean
      */
     @Nonbinding
     Class<? extends IdentityResolver> identityResolver() default ConstantResolver.class;

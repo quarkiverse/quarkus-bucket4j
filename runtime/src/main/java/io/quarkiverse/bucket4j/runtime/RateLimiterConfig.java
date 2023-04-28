@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigPhase;
@@ -29,6 +30,14 @@ public interface RateLimiterConfig {
      */
     @ConfigGroup
     interface Bucket {
+
+        /**
+         * Identity resolver allow to segment the population.
+         * Each resolved identity key will have its own quota.
+         * this must be a valid CDI bean implementing IdentityResolver.
+         */
+        @WithDefault("io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver")
+        String identityResolver();
 
         /**
          * limits enforced for this bucket
