@@ -16,7 +16,6 @@ import io.quarkiverse.bucket4j.runtime.BucketPod;
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
-import io.quarkus.arc.Unremovable;
 import io.quarkus.test.QuarkusUnitTest;
 
 public class IdentityResolverTest {
@@ -58,7 +57,6 @@ public class IdentityResolverTest {
     }
 
     @Singleton
-    @Unremovable
     public static class TestIdentityResolver implements IdentityResolver {
 
         @Override
