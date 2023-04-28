@@ -22,10 +22,12 @@ import io.quarkiverse.bucket4j.runtime.RateLimitExceptionMapper;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
 import io.quarkiverse.bucket4j.runtime.RateLimitedInterceptor;
 import io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver;
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.BeanArchiveIndexBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.deployment.Capabilities;
 import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
@@ -40,6 +42,7 @@ class Bucket4jProcessor {
 
     public static final DotName RATE_LIMITED_INTERCEPTOR = DotName.createSimple(RateLimitedInterceptor.class.getName());
     public static final DotName RATE_LIMITED = DotName.createSimple(RateLimited.class.getName());
+    public static final DotName IDENTITY_RESOLVER = DotName.createSimple(IdentityResolver.class.getName());
 
     private static final String FEATURE = "bucket4j";
 
@@ -80,6 +83,11 @@ class Bucket4jProcessor {
         if (capabilities.isPresent(Capability.VERTX_HTTP)) {
             additionalBeans.produce(AdditionalBeanBuildItem.unremovableOf(IpResolver.class));
         }
+    }
+
+    @BuildStep
+    UnremovableBeanBuildItem unremovableIdentityResolvers() {
+        return UnremovableBeanBuildItem.beanTypes(IDENTITY_RESOLVER);
     }
 
     @BuildStep
