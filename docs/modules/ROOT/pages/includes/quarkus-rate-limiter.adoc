@@ -1,0 +1,108 @@
+
+:summaryTableId: quarkus-rate-limiter
+[.configuration-legend]
+icon:lock[title=Fixed at build time] Configuration property fixed at build time - All other configuration properties are overridable at runtime
+[.configuration-reference.searchable, cols="80,.^10,.^10"]
+|===
+
+h|[[quarkus-rate-limiter_configuration]]link:#quarkus-rate-limiter_configuration[Configuration property]
+
+h|Type
+h|Default
+
+a| [[quarkus-rate-limiter_quarkus.rate-limiter.enabled]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.enabled[quarkus.rate-limiter.enabled]`
+
+[.description]
+--
+rate limiter will be completely disabled if false
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_ENABLED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_ENABLED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`true`
+
+
+a| [[quarkus-rate-limiter_quarkus.rate-limiter.max-size]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.max-size[quarkus.rate-limiter.max-size]`
+
+[.description]
+--
+Maximum number of entries in the underlying cache
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_MAX_SIZE+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_MAX_SIZE+++`
+endif::add-copy-button-to-env-var[]
+--|int 
+|`1000`
+
+
+a| [[quarkus-rate-limiter_quarkus.rate-limiter.keep-after-refill]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.keep-after-refill[quarkus.rate-limiter.keep-after-refill]`
+
+[.description]
+--
+Duration during which the bucket is kept after last refill if untouched
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_KEEP_AFTER_REFILL+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_KEEP_AFTER_REFILL+++`
+endif::add-copy-button-to-env-var[]
+--|Duration 
+|`1H`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.identity-resolver]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.identity-resolver[quarkus.rate-limiter.buckets."bucket-id".identity-resolver]`
+
+[.description]
+--
+Identity resolver allow to segment the population. Each resolved identity key will have its own quota. this must be a valid CDI bean implementing IdentityResolver.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__IDENTITY_RESOLVER+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__IDENTITY_RESOLVER+++`
+endif::add-copy-button-to-env-var[]
+--|string 
+|`io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver`
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.limits]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.limits[quarkus.rate-limiter.buckets."bucket-id".limits]`
+
+[.description]
+--
+limits enforced for this bucket
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__LIMITS+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__LIMITS+++`
+endif::add-copy-button-to-env-var[]
+--|list of Limit 
+|required icon:exclamation-circle[title=Configuration property is required]
+
+
+a|icon:lock[title=Fixed at build time] [[quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.shared]]`link:#quarkus-rate-limiter_quarkus.rate-limiter.buckets.-bucket-id-.shared[quarkus.rate-limiter.buckets."bucket-id".shared]`
+
+[.description]
+--
+If true, permitted uses are shared for all methods using the same bucket id. If false, each method has its own quota.
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__SHARED+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_RATE_LIMITER_BUCKETS__BUCKET_ID__SHARED+++`
+endif::add-copy-button-to-env-var[]
+--|boolean 
+|`false`
+
+|===

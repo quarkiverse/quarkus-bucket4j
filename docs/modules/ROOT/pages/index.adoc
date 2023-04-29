@@ -122,4 +122,4 @@ A custom resolver must be a valid CDI Bean.
 [[extension-configuration-reference]]
 == Extension Configuration Reference
 
-include::includes/quarkus-bucket4j.adoc[leveloffset=+1, opts=optional]
+include::includes/quarkus-rate-limiter.adoc[leveloffset=+1, opts=optional]
