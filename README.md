@@ -17,69 +17,6 @@ v1.x is compatible with quarkus 3+
 Read the [full documentation](https://quarkiverse.github.io/quarkiverse-docs/quarkus-bucket4j/dev/index.html).
 
 
-### Usage
-
-#### Throttling a method
-
-Annotate the method that need to be throttled with @RateLimited
-
-``` java
-@ApplicationScoped
-public static class RateLimitedMethods {
-
-    @RateLimited(bucket = "group1")
-    public String limited() {
-        return "LIMITED";
-    }
-
-}
-```
-
-You can also annotate a class, in that case all methods in the class are throttled
-
-``` java
-@ApplicationScoped
-@RateLimited(bucket = "group1")
-public static class RateLimitedMethods {
-
-    public String limited() {
-        return "LIMITED";
-    }
-
-}
-```
-
-And add a limit group using the same limitsKey in the configuration:
-
-``` properties
-# burst protection
-quarkus.rate-limiter.buckets.group1.limits[0].permitted-uses: 10
-quarkus.rate-limiter.buckets.group1.limits[0].period: 1S
-# fair use
-quarkus.rate-limiter.buckets.group1.limits[1].permitted-uses: 100
-quarkus.rate-limiter.buckets.group1.limits[1].period: 5M
-```
-
-The bucket can contain multiple limits that will all be enforced.
-If multiple methods share the same bucket id, the number of allowed requests is shared for all them.
-
-#### Population Segmentation
-
-If you want to enable throttling per user, simply specify an IdentityKeyResolver in the RateLimited annotation
-
-``` java
-@ApplicationScoped
-public static class RateLimitedMethods {
-
-    @RateLimited(bucket = "group1", identityResolver = IpResolver.class)
-    public String limitedByIp() {
-        return "LIMITED";
-    }
-}
-```
-
-IpResolver is provided out of the box. if you want a more complex segmentation, you can implement your own resolver.
-A custom resolver must be a valid CDI Bean.
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
