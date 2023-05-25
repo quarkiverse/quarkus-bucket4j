@@ -8,7 +8,7 @@
   </parent>
   <groupId>io.quarkiverse.bucket4j</groupId>
   <artifactId>quarkus-bucket4j-parent</artifactId>
-  <version>1.0.0</version>
+  <version>999-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Quarkus Bucket4j - Parent</name>
   <description>Rate-limiting library based on token-bucket algorithm.</description>
@@ -69,8 +69,4 @@
       </modules>
     </profile>
   </profiles>
-
-  <scm>
-    <tag>1.0.0</tag>
-  </scm>
 </project>
