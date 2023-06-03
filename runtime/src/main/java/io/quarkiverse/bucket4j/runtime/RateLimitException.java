@@ -4,8 +4,8 @@ public class RateLimitException extends RuntimeException {
 
     private final long waitTimeInMilliSeconds;
 
-    RateLimitException(long waitTimeInNanoSeconds) {
-        this.waitTimeInMilliSeconds = waitTimeInNanoSeconds;
+    RateLimitException(long waitTimeInMilliSeconds) {
+        this.waitTimeInMilliSeconds = waitTimeInMilliSeconds;
     }
 
     public long getWaitTimeInMilliSeconds() {

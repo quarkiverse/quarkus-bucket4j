@@ -1,4 +1,4 @@
-package io.quarkiverse.freemarker.deployment.devui;
+package io.quarkiverse.bucket4j.deployment.devui;
 
 import java.util.Objects;
 
