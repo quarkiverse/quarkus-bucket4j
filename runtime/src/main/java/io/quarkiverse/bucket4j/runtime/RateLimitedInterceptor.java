@@ -36,7 +36,7 @@ public class RateLimitedInterceptor {
         if (consumptionProbe.isConsumed()) {
             return context.proceed();
         }
-        throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill() / 1000L);
+        throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill() / 1000_000L);
     }
 
 }

@@ -49,7 +49,7 @@ public class RateLimiterTest {
         methods.limited();
         RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
         assertThat(rateLimitException.getWaitTimeInMilliSeconds())
-                .isBetween(800_000L, 1000_000L);
+                .isBetween(800L, 1000L);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class RateLimiterTest {
         clazz.limited();
         RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> clazz.limited());
         assertThat(rateLimitException.getWaitTimeInMilliSeconds())
-                .isBetween(800_000L, 1000_000L);
+                .isBetween(800L, 1000L);
     }
 
     @Test
