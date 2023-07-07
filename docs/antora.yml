@@ -1,5 +1,5 @@
 name: quarkus-bucket4j
-title: Quarkus Bucket4j
+title: Bucket4j
 version: dev
 nav:
   - modules/ROOT/nav.adoc
