@@ -30,7 +30,10 @@ public class BucketPodStorageRecorder {
 
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (RateLimiterConfig.Limit limit : bucketConfig.limits()) {
-            builder.addLimit(Bandwidth.simple(limit.permittedUses(), limit.period()));
+            builder.addLimit(Bandwidth.builder()
+                    .capacity(limit.permittedUses())
+                    .refillGreedy(limit.permittedUses(), limit.period())
+                    .build());
         }
         String id = bucketConfig.shared() ? key : key + methodDescription.hashCode();
         try {
