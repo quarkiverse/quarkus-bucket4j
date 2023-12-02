@@ -33,6 +33,6 @@ public class BucketPod {
     }
 
     public Bucket getBucket(ProxyManager<String> proxyManager) {
-        return proxyManager.builder().build(getId() + "_" + getIdentityResolver().getIdentityKey(), getConfiguration());
+        return proxyManager.builder().build(getId() + "_" + getIdentityResolver().getIdentityKey(), this::getConfiguration);
     }
 }
