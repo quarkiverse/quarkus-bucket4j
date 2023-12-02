@@ -10,7 +10,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
 
 @RateLimited
 @Interceptor
@@ -20,9 +19,6 @@ public class RateLimitedInterceptor {
     @Inject
     BucketPodStorage bucketPodStorage;
 
-    @Inject
-    ProxyManager<String> proxyManager;
-
     @ConfigProperty(name = "quarkus.rate-limiter.enabled")
     boolean enabled;
 
@@ -31,7 +27,7 @@ public class RateLimitedInterceptor {
         if (!enabled) {
             return context.proceed();
         }
-        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket(proxyManager);
+        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket();
         ConsumptionProbe consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
         if (consumptionProbe.isConsumed()) {
             return context.proceed();
