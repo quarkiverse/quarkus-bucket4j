@@ -8,9 +8,6 @@ import jakarta.interceptor.InvocationContext;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
-
 @RateLimited
 @Interceptor
 @Priority(Interceptor.Priority.LIBRARY_BEFORE)
@@ -27,12 +24,11 @@ public class RateLimitedInterceptor {
         if (!enabled) {
             return context.proceed();
         }
-        Bucket bucket = bucketPodStorage.getBucketPod(context.getMethod()).getBucket();
-        ConsumptionProbe consumptionProbe = bucket.tryConsumeAndReturnRemaining(1);
-        if (consumptionProbe.isConsumed()) {
+        long nanoWaitTime = bucketPodStorage.getBucketPod(context.getMethod()).consumeAndReturnNanoWaitTime();
+        if (nanoWaitTime == 0) {
             return context.proceed();
         }
-        throw new RateLimitException(consumptionProbe.getNanosToWaitForRefill() / 1000_000L);
+        throw new RateLimitException(nanoWaitTime / 1000_000L);
     }
 
 }
