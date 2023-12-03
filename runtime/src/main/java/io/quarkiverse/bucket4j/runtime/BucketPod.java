@@ -1,6 +1,7 @@
 package io.quarkiverse.bucket4j.runtime;
 
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.util.TypeLiteral;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.BucketConfiguration;
@@ -24,6 +25,10 @@ public class BucketPod {
         return this.id;
     }
 
+    public long consumeAndReturnNanoWaitTime() {
+        return getBucket().tryConsumeAndReturnRemaining(1).getNanosToWaitForRefill();
+    }
+
     public BucketConfiguration getConfiguration() {
         return this.configuration;
     }
@@ -32,7 +37,14 @@ public class BucketPod {
         return CDI.current().select(identityResolver).get();
     }
 
-    public Bucket getBucket(ProxyManager<String> proxyManager) {
-        return proxyManager.builder().build(getId() + "_" + getIdentityResolver().getIdentityKey(), this::getConfiguration);
+    ProxyManager<String> getProxyManager() {
+        return CDI.current().select(new TypeLiteral<ProxyManager<String>>() {
+        }).get();
+    }
+
+    Bucket getBucket() {
+
+        return getProxyManager().builder().build(getId() + "_" + getIdentityResolver().getIdentityKey(),
+                this::getConfiguration);
     }
 }
