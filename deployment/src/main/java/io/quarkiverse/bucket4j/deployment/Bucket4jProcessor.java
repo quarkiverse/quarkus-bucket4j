@@ -1,7 +1,9 @@
 package io.quarkiverse.bucket4j.deployment;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -91,19 +93,16 @@ class Bucket4jProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
     void gatherRateLimitCheck(BeanArchiveIndexBuildItem beanArchiveBuildItem,
-            BuildProducer<SyntheticBeanBuildItem> syntheticBeans,
-            BucketPodStorageRecorder recorder) {
+            BuildProducer<RateLimitCheckBuildItem> producer) {
 
         Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
+        Map<MethodDescription, RateLimitCheckBuildItem> visited = new HashMap<>();
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
-                MethodInfo methodInfo = target.asMethod();
-                recorder.registerMethod(createDescription(methodInfo),
-                        instance.value("bucket").asString(), getIdentityResolver(instance));
+                visit(visited, instance, target.asMethod());
             }
         }
 
@@ -112,11 +111,30 @@ class Bucket4jProcessor {
             if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
                 List<MethodInfo> methods = target.asClass().methods();
                 for (MethodInfo methodInfo : methods) {
-                    recorder.registerMethod(createDescription(methodInfo),
-                            instance.value("bucket").asString(), getIdentityResolver(instance));
+                    visit(visited, instance, methodInfo);
                 }
             }
         }
+
+        visited.values().forEach(producer::produce);
+
+    }
+
+    private void visit(Map<MethodDescription, RateLimitCheckBuildItem> visited, AnnotationInstance instance,
+            MethodInfo methodInfo) {
+        visited.computeIfAbsent(createDescription(methodInfo),
+                md -> new RateLimitCheckBuildItem(md, instance.value("bucket").asString(), getIdentityResolver(instance)));
+    }
+
+    @BuildStep
+    @Record(ExecutionTime.STATIC_INIT)
+    void createBucketPodStorage(
+            BucketPodStorageRecorder recorder,
+            List<RateLimitCheckBuildItem> rateLimitChecks,
+            BuildProducer<SyntheticBeanBuildItem> syntheticBeans) {
+
+        rateLimitChecks.forEach(
+                item -> recorder.registerMethod(item.getMethodDescription(), item.getBucket(), item.getIdentityResolver()));
 
         syntheticBeans.produce(
                 SyntheticBeanBuildItem.configure(BucketPodStorage.class)
@@ -126,8 +144,10 @@ class Bucket4jProcessor {
                         .done());
     }
 
-    private Optional<String> getIdentityResolver(AnnotationInstance instance) {
-        return Optional.ofNullable(instance.value("identityResolver")).map(AnnotationValue::asString);
+    private String getIdentityResolver(AnnotationInstance instance) {
+        return Optional.ofNullable(instance.value("identityResolver"))
+                .map(AnnotationValue::asString)
+                .orElse(null);
     }
 
     private MethodDescription createDescription(MethodInfo method) {
