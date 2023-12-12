@@ -54,6 +54,11 @@ public class MethodDescription {
         return hashCode;
     }
 
+    @Override
+    public String toString() {
+        return getClassName() + " " + getMethodName() + "(" + String.join(", ", getParameterTypes()) + ")";
+    }
+
     public static MethodDescription ofMethod(Method method) {
         return new MethodDescription(method.getDeclaringClass().getName(), method.getName(),
                 typesAsStrings(method.getParameterTypes()));
@@ -66,4 +71,5 @@ public class MethodDescription {
         }
         return result;
     }
+
 }
