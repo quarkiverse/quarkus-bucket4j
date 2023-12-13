@@ -127,12 +127,11 @@ class Bucket4jProcessor {
     }
 
     @BuildStep
-    @Record(ExecutionTime.STATIC_INIT)
+    @Record(ExecutionTime.RUNTIME_INIT)
     void createBucketPodStorage(
             BucketPodStorageRecorder recorder,
             List<RateLimitCheckBuildItem> rateLimitChecks,
             BuildProducer<SyntheticBeanBuildItem> syntheticBeans) {
-
         rateLimitChecks.forEach(
                 item -> recorder.registerMethod(item.getMethodDescription(), item.getBucket(), item.getIdentityResolver()));
 
@@ -140,7 +139,8 @@ class Bucket4jProcessor {
                 SyntheticBeanBuildItem.configure(BucketPodStorage.class)
                         .scope(ApplicationScoped.class)
                         .unremovable()
-                        .runtimeValue(recorder.create())
+                        .runtimeProxy(recorder.create())
+                        .setRuntimeInit()
                         .done());
     }
 
