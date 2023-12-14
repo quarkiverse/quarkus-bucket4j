@@ -37,7 +37,7 @@ public interface RateLimiterRuntimeConfig {
     Duration keepAfterRefill();
 
     /**
-     * represent a group of limit applied to a method
+     * Represents a group of limits applied to a method
      * identified by the bucket id
      */
     @ConfigDocMapKey("bucket-id")
