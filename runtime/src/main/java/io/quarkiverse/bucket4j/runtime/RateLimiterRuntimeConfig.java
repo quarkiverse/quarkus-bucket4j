@@ -58,7 +58,7 @@ public interface RateLimiterRuntimeConfig {
         String identityResolver();
 
         /**
-         * limits enforced for this bucket
+         * Limits enforced for this bucket
          */
         List<Limit> limits();
 
