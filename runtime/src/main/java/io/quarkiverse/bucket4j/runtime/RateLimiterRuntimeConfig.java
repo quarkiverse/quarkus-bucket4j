@@ -82,7 +82,7 @@ public interface RateLimiterRuntimeConfig {
         int permittedUses();
 
         /**
-         * evaluation period
+         * Evaluation period
          */
         @WithConverter(DurationConverter.class)
         Duration period();
