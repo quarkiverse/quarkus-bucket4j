@@ -1,7 +1,11 @@
 package io.quarkiverse.bucket4j.runtime;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
+import io.quarkus.runtime.annotations.ConfigDocMapKey;
+import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigPhase;
 import io.quarkus.runtime.annotations.ConfigRoot;
 import io.quarkus.runtime.configuration.DurationConverter;
@@ -32,4 +36,55 @@ public interface RateLimiterRuntimeConfig {
     @WithConverter(DurationConverter.class)
     Duration keepAfterRefill();
 
+    /**
+     * Represents a group of limits applied to a method
+     * identified by the bucket id
+     */
+    @ConfigDocMapKey("bucket-id")
+    Map<String, Bucket> buckets();
+
+    /**
+     * represent one single bucket
+     */
+    @ConfigGroup
+    interface Bucket {
+
+        /**
+         * Identity resolver allow to segment the population.
+         * Each resolved identity key will have its own quota.
+         * this must be a valid CDI bean implementing IdentityResolver.
+         */
+        @WithDefault("io.quarkiverse.bucket4j.runtime.resolver.ConstantResolver")
+        String identityResolver();
+
+        /**
+         * Limits enforced for this bucket
+         */
+        List<Limit> limits();
+
+        /**
+         * If true, permitted uses are shared for all methods using the same bucket id.
+         * If false, each method has its own quota.
+         */
+        @WithDefault("false")
+        Boolean shared();
+    }
+
+    /**
+     * represent one single limit
+     */
+    @ConfigGroup
+    interface Limit {
+
+        /**
+         * Number of usage per period
+         */
+        int permittedUses();
+
+        /**
+         * Evaluation period
+         */
+        @WithConverter(DurationConverter.class)
+        Duration period();
+    }
 }
