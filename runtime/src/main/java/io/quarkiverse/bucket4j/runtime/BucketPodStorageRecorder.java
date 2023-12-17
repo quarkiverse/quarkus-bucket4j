@@ -16,6 +16,8 @@ import io.quarkus.runtime.annotations.Recorder;
 public class BucketPodStorageRecorder {
 
     private final RateLimiterRuntimeConfig config;
+
+    Map<String, BucketConfiguration> podsConfigurations = new HashMap<>();
     Map<MethodDescription, BucketPod> pods = new HashMap<>();
 
     public BucketPodStorageRecorder(RateLimiterRuntimeConfig config) {
@@ -24,20 +26,27 @@ public class BucketPodStorageRecorder {
 
     private BucketPod getBucketPod(MethodDescription methodDescription, String key,
             String identityResolverClassName) {
+
         Bucket bucketConfig = config.buckets().get(key);
-        if (bucketConfig == null) {
-            throw new IllegalStateException("missing limits config for " + key);
-        }
-        ConfigurationBuilder builder = BucketConfiguration.builder();
-        for (Limit limit : bucketConfig.limits()) {
-            builder.addLimit(Bandwidth.builder()
-                    .capacity(limit.permittedUses())
-                    .refillGreedy(limit.permittedUses(), limit.period())
-                    .build());
-        }
+
+        BucketConfiguration podConfig = podsConfigurations.computeIfAbsent(key, (k) -> {
+            if (bucketConfig == null) {
+                throw new IllegalStateException("missing limits config for " + key);
+            }
+            ConfigurationBuilder builder = BucketConfiguration.builder();
+            for (Limit limit : bucketConfig.limits()) {
+                builder.addLimit(Bandwidth.builder()
+                        .capacity(limit.permittedUses())
+                        .refillGreedy(limit.permittedUses(), limit.period())
+                        .build());
+            }
+            return builder.build();
+        });
+
         String id = bucketConfig.shared() ? key : key + methodDescription.hashCode();
+
         try {
-            return new BucketPod(id, builder.build(),
+            return new BucketPod(id, podConfig,
                     (Class<? extends IdentityResolver>) Thread.currentThread().getContextClassLoader()
                             .loadClass(Optional.ofNullable(identityResolverClassName).orElse(bucketConfig.identityResolver())));
         } catch (ClassNotFoundException e) {
