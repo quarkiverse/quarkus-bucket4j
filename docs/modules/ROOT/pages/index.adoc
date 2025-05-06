@@ -41,6 +41,22 @@ public static class RateLimitedMethods {
 }
 ----
 
+The annotation is repeatable enabling to set multiple limit, in such case, any exhausted bucket lead to the failure of the call.
+
+[source,java]
+----
+@ApplicationScoped
+public static class RateLimitedMethods {
+
+    @RateLimited(bucket = "group1")
+    @RateLimited(bucket = "group2")
+    public String limited() {
+        return "LIMITED";
+    }
+
+}
+----
+
 You can also annotate a class, in that case all methods in the class are throttled
 
 [source,java]
@@ -50,6 +66,30 @@ You can also annotate a class, in that case all methods in the class are throttl
 public static class RateLimitedMethods {
 
     public String limited() {
+        return "LIMITED";
+    }
+
+}
+----
+
+Method level annotation overrides class level annotation.
+In the example bellow:
+
+- `method1` is throttled by bucket `group1`
+- `method2` is throttled by bucket `group2`
+
+[source,java]
+----
+@ApplicationScoped
+@RateLimited(bucket = "group1")
+public static class RateLimitedMethods {
+
+    public String method1() {
+        return "LIMITED";
+    }
+
+    @RateLimited(bucket = "group2")
+    public String method2() {
         return "LIMITED";
     }
 

@@ -2,6 +2,8 @@ package io.quarkiverse.bucket4j.test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.util.UUID;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.inject.Inject;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.quarkiverse.bucket4j.runtime.RateLimitException;
 import io.quarkiverse.bucket4j.runtime.RateLimited;
+import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 import io.quarkiverse.bucket4j.runtime.resolver.IpResolver;
 import io.quarkus.test.QuarkusUnitTest;
 
@@ -36,7 +39,11 @@ public class RateLimiterTest {
                                     "quarkus.rate-limiter.buckets.isolated-method.limits[0].period: 1S\n" +
                                     "quarkus.rate-limiter.buckets.shared-method.shared: true\n" +
                                     "quarkus.rate-limiter.buckets.shared-method.limits[0].permitted-uses: 1\n" +
-                                    "quarkus.rate-limiter.buckets.shared-method.limits[0].period: 1S\n"),
+                                    "quarkus.rate-limiter.buckets.shared-method.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.repeated-limit-global.limits[0].permitted-uses: 3\n" +
+                                    "quarkus.rate-limiter.buckets.repeated-limit-global.limits[0].period: 10S\n" +
+                                    "quarkus.rate-limiter.buckets.repeated-limit-peruser.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.repeated-limit-peruser.limits[0].period: 1S\n"),
                             "application.properties"));
 
     @Inject
@@ -50,6 +57,23 @@ public class RateLimiterTest {
         RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class, () -> methods.limited());
         assertThat(rateLimitException.getWaitTimeInMilliSeconds())
                 .isBetween(800L, 1000L);
+    }
+
+    @Test
+    public void rateLimitExceptionIsThrownIfQuotaIsExceededForAtLeastOneMethodAnnotation() {
+        // Bucket pods state : global:3, user1:1, user2:1
+        methods.limitedByTwoLimits();
+        // Bucket pods state : global:2, user1:0, user2:1
+        methods.limitedByTwoLimits();
+        // Bucket pods state : global:1, user1:0, user2:0
+        RateLimitException rateLimitException = Assertions.assertThrows(RateLimitException.class,
+                () -> methods.limitedByTwoLimits());
+        assertThat(rateLimitException.getWaitTimeInMilliSeconds()).isBetween(800L, 1000L);
+    }
+
+    @Test
+    public void rateLimitExceptionIsThrownWhenMultipleRateLimitUseTheSameBucketOnAGivenMethod() {
+        Assertions.assertThrows(RateLimitException.class, () -> methods.twoLimitsUsingSameBucket());
     }
 
     @Test
@@ -110,6 +134,18 @@ public class RateLimiterTest {
             return "LIMITED";
         }
 
+        @RateLimited(bucket = "repeated-limit-global")
+        @RateLimited(bucket = "repeated-limit-peruser", identityResolver = FirstCallUser1OtherUser2.class)
+        public String limitedByTwoLimits() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "annotated-method")
+        @RateLimited(bucket = "annotated-method")
+        public String twoLimitsUsingSameBucket() {
+            return "LIMITED";
+        }
+
     }
 
     @ApplicationScoped
@@ -117,6 +153,23 @@ public class RateLimiterTest {
     public static class RateLimitedClass {
         public String limited() {
             return "LIMITED";
+        }
+    }
+
+    @ApplicationScoped
+    public static class FirstCallUser1OtherUser2 implements IdentityResolver {
+        boolean isFirstCall = true;
+        String firstCallUUID = UUID.randomUUID().toString();
+        String otherCallUUID = UUID.randomUUID().toString();
+
+        @Override
+        public String getIdentityKey() {
+            if (isFirstCall) {
+                isFirstCall = false;
+                return firstCallUUID;
+            } else {
+                return otherCallUUID;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -16,6 +17,7 @@ import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
 @InterceptorBinding
 @Target({ METHOD, TYPE })
 @Retention(RUNTIME)
+@Repeatable(RateLimited.List.class)
 public @interface RateLimited {
 
     String DEFAULT_BUCKET = "io.quarkiverse.bucket4j.runtime.RateLimited<DEFAULT>";
@@ -40,4 +42,9 @@ public @interface RateLimited {
     @Nonbinding
     Class<? extends IdentityResolver> identityResolver() default ConstantResolver.class;
 
+    @Target({ METHOD, TYPE })
+    @Retention(RUNTIME)
+    @interface List {
+        RateLimited[] value();
+    }
 }

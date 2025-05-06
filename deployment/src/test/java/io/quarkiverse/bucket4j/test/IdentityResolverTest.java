@@ -1,6 +1,9 @@
 package io.quarkiverse.bucket4j.test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -40,7 +43,9 @@ public class IdentityResolverTest {
 
     @Test
     public void identityResolverCanBeConfiguredViaAnnotation() throws NoSuchMethodException {
-        BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("byAnnotation"));
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedMethods.class.getMethod("byAnnotation"));
+        assertFalse(pods.isEmpty());
+        BucketPod pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getIdentityResolver())
                 .isNotNull()
@@ -49,7 +54,9 @@ public class IdentityResolverTest {
 
     @Test
     public void identityResolverCanBeConfiguredViaConfig() throws NoSuchMethodException {
-        BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("byConfig"));
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedMethods.class.getMethod("byConfig"));
+        assertFalse(pods.isEmpty());
+        BucketPod pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getIdentityResolver())
                 .isNotNull()

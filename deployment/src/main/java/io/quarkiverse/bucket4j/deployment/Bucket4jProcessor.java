@@ -1,5 +1,6 @@
 package io.quarkiverse.bucket4j.deployment;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 
 import io.quarkiverse.bucket4j.runtime.BucketPodStorage;
@@ -96,34 +98,42 @@ class Bucket4jProcessor {
     void gatherRateLimitCheck(BeanArchiveIndexBuildItem beanArchiveBuildItem,
             BuildProducer<RateLimitCheckBuildItem> producer) {
 
-        Collection<AnnotationInstance> instances = beanArchiveBuildItem.getIndex().getAnnotations(RATE_LIMITED);
-        Map<MethodDescription, RateLimitCheckBuildItem> visited = new HashMap<>();
+        IndexView index = beanArchiveBuildItem.getIndex();
+        Collection<AnnotationInstance> instances = index.getAnnotationsWithRepeatable(RATE_LIMITED, index);
+        Map<MethodDescription, List<RateLimitCheckBuildItem>> visitedAtMethodLevel = new HashMap<>();
+        Map<MethodDescription, List<RateLimitCheckBuildItem>> visitedAtClassLevel = new HashMap<>();
 
         for (AnnotationInstance instance : instances) {
             AnnotationTarget target = instance.target();
             if (target.kind() == AnnotationTarget.Kind.METHOD) {
-                visit(visited, instance, target.asMethod());
+                visitMethods(visitedAtMethodLevel, instance, target.asMethod());
+            } else if (target.kind() == AnnotationTarget.Kind.CLASS
+                    && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
+                visitClass(visitedAtClassLevel, instance, target);
             }
         }
 
-        for (AnnotationInstance instance : instances) {
-            AnnotationTarget target = instance.target();
-            if (target.kind() == AnnotationTarget.Kind.CLASS && !RATE_LIMITED_INTERCEPTOR.equals(target.asClass().name())) {
-                List<MethodInfo> methods = target.asClass().methods();
-                for (MethodInfo methodInfo : methods) {
-                    visit(visited, instance, methodInfo);
-                }
-            }
-        }
+        Map<MethodDescription, List<RateLimitCheckBuildItem>> visited = new HashMap<>(visitedAtMethodLevel);
+        visitedAtClassLevel.forEach((key, value) -> visited.merge(key, value, (existing, incoming) -> existing));
 
         visited.values().forEach(producer::produce);
 
     }
 
-    private void visit(Map<MethodDescription, RateLimitCheckBuildItem> visited, AnnotationInstance instance,
+    private void visitClass(Map<MethodDescription, List<RateLimitCheckBuildItem>> visited, AnnotationInstance instance,
+            AnnotationTarget target) {
+        List<MethodInfo> methods = target.asClass().methods();
+        for (MethodInfo methodInfo : methods) {
+            visitMethods(visited, instance, methodInfo);
+        }
+    }
+
+    private void visitMethods(Map<MethodDescription, List<RateLimitCheckBuildItem>> visited, AnnotationInstance instance,
             MethodInfo methodInfo) {
-        visited.computeIfAbsent(createDescription(methodInfo),
-                md -> new RateLimitCheckBuildItem(md, instance.value("bucket").asString(), getIdentityResolver(instance)));
+        MethodDescription description = createDescription(methodInfo);
+        List<RateLimitCheckBuildItem> rateLimitCheckBuildItems = visited.computeIfAbsent(description, k -> new ArrayList<>());
+        rateLimitCheckBuildItems.add(
+                new RateLimitCheckBuildItem(description, instance.value("bucket").asString(), getIdentityResolver(instance)));
     }
 
     @BuildStep
