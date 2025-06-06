@@ -1,13 +1,14 @@
 package io.quarkiverse.bucket4j.runtime;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 public interface BucketPodStorage {
 
-    default BucketPod getBucketPod(Method method) {
-        return getBucketPod(MethodDescription.ofMethod(method));
+    default List<BucketPod> getBucketPods(Method method) {
+        return getBucketPods(MethodDescription.ofMethod(method));
     }
 
-    BucketPod getBucketPod(MethodDescription methodDescription);
+    List<BucketPod> getBucketPods(MethodDescription methodDescription);
 
 }

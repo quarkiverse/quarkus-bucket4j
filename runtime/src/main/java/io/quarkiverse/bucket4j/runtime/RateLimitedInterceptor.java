@@ -1,5 +1,7 @@
 package io.quarkiverse.bucket4j.runtime;
 
+import java.util.List;
+
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
@@ -24,7 +26,17 @@ public class RateLimitedInterceptor {
         if (!enabled) {
             return context.proceed();
         }
-        long nanoWaitTime = bucketPodStorage.getBucketPod(context.getMethod()).consumeAndReturnNanoWaitTime();
+        List<BucketPod> bucketPods = bucketPodStorage.getBucketPods(context.getMethod());
+
+        // Consume a token on all matching bucket and keep the highest wait time
+        long nanoWaitTime = 0;
+        for (BucketPod bucketPod : bucketPods) {
+            long bucketNanoWaitTime = bucketPod.consumeAndReturnNanoWaitTime();
+            if (bucketNanoWaitTime > nanoWaitTime) {
+                nanoWaitTime = bucketNanoWaitTime;
+            }
+        }
+
         if (nanoWaitTime == 0) {
             return context.proceed();
         }

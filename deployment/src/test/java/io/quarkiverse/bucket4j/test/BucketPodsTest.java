@@ -1,6 +1,9 @@
 package io.quarkiverse.bucket4j.test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -45,7 +48,9 @@ public class BucketPodsTest {
 
     @Test
     public void podIsCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
-        BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("limited"));
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedMethods.class.getMethod("limited"));
+        assertEquals(1, pods.size());
+        BucketPod pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("annotated-method");
         BucketConfiguration configuration = pod.getConfiguration();
@@ -66,20 +71,26 @@ public class BucketPodsTest {
 
     @Test
     public void podIsCorrectlyCreatedForIsolatedMethods() throws NoSuchMethodException {
-        BucketPod pod = storage.getBucketPod(RateLimitedMethods.class.getMethod("isolatedMethod"));
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedMethods.class.getMethod("isolatedMethod"));
+        assertEquals(1, pods.size());
+        BucketPod pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("isolated-method-1867211146");
     }
 
     @Test
     public void podIsCorrectlyCreatedForAnnotatedClass() throws NoSuchMethodException {
-        BucketPod pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limited"));
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedClass.class.getMethod("limited"));
+        assertEquals(1, pods.size());
+        BucketPod pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("annotated-class");
         assertThat(pod.getIdentityResolver())
                 .isNotNull()
                 .isOfAnyClassIn(ConstantResolver.class);
-        pod = storage.getBucketPod(RateLimitedClass.class.getMethod("limitedAnnotated"));
+        pods = storage.getBucketPods(RateLimitedClass.class.getMethod("limitedAnnotated"));
+        assertEquals(1, pods.size());
+        pod = pods.get(0);
         assertThat(pod).isNotNull();
         assertThat(pod.getId()).isEqualTo("annotated-method");
         assertThat(pod.getIdentityResolver())

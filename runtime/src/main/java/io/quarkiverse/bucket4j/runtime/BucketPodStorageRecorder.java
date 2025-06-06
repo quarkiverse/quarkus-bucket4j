@@ -1,6 +1,8 @@
 package io.quarkiverse.bucket4j.runtime;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +18,7 @@ import io.quarkus.runtime.annotations.Recorder;
 public class BucketPodStorageRecorder {
 
     private final RateLimiterRuntimeConfig config;
-    Map<MethodDescription, BucketPod> pods = new HashMap<>();
+    Map<MethodDescription, List<BucketPod>> pods = new HashMap<>();
 
     public BucketPodStorageRecorder(RateLimiterRuntimeConfig config) {
         this.config = config;
@@ -48,7 +50,8 @@ public class BucketPodStorageRecorder {
 
     public void registerMethod(MethodDescription description,
             String key, String identityResolverClassName) {
-        pods.put(description, getBucketPod(description, key, identityResolverClassName));
+        List<BucketPod> bucketPods = pods.computeIfAbsent(description, k -> new ArrayList<>());
+        bucketPods.add(getBucketPod(description, key, identityResolverClassName));
     }
 
     public BucketPodStorage create() {
