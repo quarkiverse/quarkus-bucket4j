@@ -25,13 +25,13 @@
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-core</artifactId>
-            <version>8.10.1</version>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>8.14.0</version>
         </dependency>
         <dependency>
             <groupId>com.bucket4j</groupId>
-            <artifactId>bucket4j-caffeine</artifactId>
-            <version>8.10.1</version>
+            <artifactId>bucket4j_jdk17-caffeine</artifactId>
+            <version>8.14.0</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
