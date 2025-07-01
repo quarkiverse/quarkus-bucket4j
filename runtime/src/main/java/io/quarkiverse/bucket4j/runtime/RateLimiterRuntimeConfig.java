@@ -3,6 +3,7 @@ package io.quarkiverse.bucket4j.runtime;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import io.quarkus.runtime.annotations.ConfigDocMapKey;
 import io.quarkus.runtime.annotations.ConfigGroup;
@@ -77,6 +78,17 @@ public interface RateLimiterRuntimeConfig {
     interface Limit {
 
         /**
+         * Refill speed tokens
+         */
+        @WithDefault("greedy")
+        RefillSpeed refillSpeed();
+
+        /**
+         * Count initial tokens
+         */
+        Optional<Long> initialTokens();
+
+        /**
          * Number of usage per period
          */
         int permittedUses();
@@ -86,5 +98,26 @@ public interface RateLimiterRuntimeConfig {
          */
         @WithConverter(DurationConverter.class)
         Duration period();
+
+        /**
+         * Refill speed
+         */
+        enum RefillSpeed {
+
+            /**
+             * Greedily regenerates tokens.
+             * <p>
+             * The tokens are refilled as soon as possible.
+             */
+            GREEDY,
+
+            /**
+             * Regenerates tokens in an interval manner.
+             * <p>
+             * The tokens refilled on the specific defined interval.
+             */
+            INTERVAL,
+
+        }
     }
 }

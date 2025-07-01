@@ -40,7 +40,17 @@ public class BucketPodsTest {
                                     "quarkus.rate-limiter.buckets.annotated-class.limits[0].period: 1S\n" +
                                     "quarkus.rate-limiter.buckets.isolated-method.shared: false\n" +
                                     "quarkus.rate-limiter.buckets.isolated-method.limits[0].permitted-uses: 1\n" +
-                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].period: 1S\n"),
+                                    "quarkus.rate-limiter.buckets.isolated-method.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.shared: true\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[0].refill-speed: interval\n"
+                                    +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[0].permitted-uses: 1\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[0].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[1].refill-speed: interval\n"
+                                    +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[1].permitted-uses: 10\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[1].period: 1S\n" +
+                                    "quarkus.rate-limiter.buckets.annotated-method-interval.limits[1].initial-tokens: 5\n"),
                             "application.properties"));
 
     @Inject
@@ -56,10 +66,14 @@ public class BucketPodsTest {
         BucketConfiguration configuration = pod.getConfiguration();
         assertThat(configuration.getBandwidths())
                 .hasSize(2);
+        assertThat(configuration.getBandwidths()[0].isGready())
+                .isEqualTo(true);
         assertThat(configuration.getBandwidths()[0].getCapacity())
                 .isEqualTo(10L);
         assertThat(configuration.getBandwidths()[0].getRefillPeriodNanos())
                 .isEqualTo(1000_000_000L);
+        assertThat(configuration.getBandwidths()[1].isGready())
+                .isEqualTo(true);
         assertThat(configuration.getBandwidths()[1].getCapacity())
                 .isEqualTo(100L);
         assertThat(configuration.getBandwidths()[1].getRefillPeriodNanos())
@@ -98,11 +112,49 @@ public class BucketPodsTest {
                 .isOfAnyClassIn(ConstantResolver.class);
     }
 
+    @Test
+    public void podsIntervalCorrectlyCreatedForAnnotatedMethods() throws NoSuchMethodException {
+        List<BucketPod> pods = storage.getBucketPods(RateLimitedMethods.class.getMethod("limitedInterval"));
+        assertEquals(1, pods.size());
+        BucketPod pod = pods.get(0);
+        assertThat(pod).isNotNull();
+        assertThat(pod.getId()).isEqualTo("annotated-method-interval");
+        BucketConfiguration configuration = pod.getConfiguration();
+        assertThat(configuration.getBandwidths())
+                .hasSize(2);
+        assertThat(configuration.getBandwidths()[0].isGready())
+                .isEqualTo(false);
+        assertThat(configuration.getBandwidths()[0].isRefillIntervally())
+                .isEqualTo(true);
+        assertThat(configuration.getBandwidths()[0].getCapacity())
+                .isEqualTo(1L);
+        assertThat(configuration.getBandwidths()[0].getRefillPeriodNanos())
+                .isEqualTo(1_000_000_000L);
+        assertThat(configuration.getBandwidths()[1].isGready())
+                .isEqualTo(false);
+        assertThat(configuration.getBandwidths()[1].isRefillIntervally())
+                .isEqualTo(true);
+        assertThat(configuration.getBandwidths()[1].getCapacity())
+                .isEqualTo(10L);
+        assertThat(configuration.getBandwidths()[1].getInitialTokens())
+                .isEqualTo(5L);
+        assertThat(configuration.getBandwidths()[1].getRefillPeriodNanos())
+                .isEqualTo(1_000_000_000L);
+        assertThat(pod.getIdentityResolver())
+                .isNotNull()
+                .isOfAnyClassIn(ConstantResolver.class);
+    }
+
     @ApplicationScoped
     public static class RateLimitedMethods {
 
         @RateLimited(bucket = "annotated-method")
         public String limited() {
+            return "LIMITED";
+        }
+
+        @RateLimited(bucket = "annotated-method-interval")
+        public String limitedInterval() {
             return "LIMITED";
         }
 
