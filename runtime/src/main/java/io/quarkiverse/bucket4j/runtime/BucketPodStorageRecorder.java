@@ -1,5 +1,8 @@
 package io.quarkiverse.bucket4j.runtime;
 
+import static io.quarkiverse.bucket4j.runtime.RateLimiterRuntimeConfig.Limit.RefillSpeed.GREEDY;
+import static io.quarkiverse.bucket4j.runtime.RateLimiterRuntimeConfig.Limit.RefillSpeed.INTERVAL;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.BandwidthBuilder;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.ConfigurationBuilder;
 import io.quarkiverse.bucket4j.runtime.RateLimiterRuntimeConfig.Bucket;
@@ -32,10 +36,7 @@ public class BucketPodStorageRecorder {
         }
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (Limit limit : bucketConfig.limits()) {
-            builder.addLimit(Bandwidth.builder()
-                    .capacity(limit.permittedUses())
-                    .refillGreedy(limit.permittedUses(), limit.period())
-                    .build());
+            builder.addLimit(createBandwidth(limit));
         }
         String id = bucketConfig.shared() ? key : key + methodDescription.hashCode();
         try {
@@ -46,6 +47,26 @@ public class BucketPodStorageRecorder {
             throw new IllegalStateException(e);
         }
 
+    }
+
+    private Bandwidth createBandwidth(Limit limit) {
+        BandwidthBuilder.BandwidthBuilderRefillStage refillStage = Bandwidth.builder()
+                .capacity(limit.permittedUses());
+        BandwidthBuilder.BandwidthBuilderBuildStage stageBuilder;
+        Limit.RefillSpeed refillSpeed = limit.refillSpeed();
+        if (refillSpeed == GREEDY) {
+            stageBuilder = refillStage
+                    .refillGreedy(limit.permittedUses(), limit.period());
+        } else if (refillSpeed == INTERVAL) {
+            stageBuilder = refillStage
+                    .refillIntervally(limit.permittedUses(), limit.period());
+        } else {
+            throw new IllegalArgumentException();
+        }
+        if (limit.initialTokens().isPresent()) {
+            stageBuilder = stageBuilder.initialTokens(limit.initialTokens().get());
+        }
+        return stageBuilder.build();
     }
 
     public void registerMethod(MethodDescription description,
