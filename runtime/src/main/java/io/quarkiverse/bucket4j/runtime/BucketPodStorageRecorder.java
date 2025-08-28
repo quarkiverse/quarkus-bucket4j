@@ -16,21 +16,22 @@ import io.github.bucket4j.ConfigurationBuilder;
 import io.quarkiverse.bucket4j.runtime.RateLimiterRuntimeConfig.Bucket;
 import io.quarkiverse.bucket4j.runtime.RateLimiterRuntimeConfig.Limit;
 import io.quarkiverse.bucket4j.runtime.resolver.IdentityResolver;
+import io.quarkus.runtime.RuntimeValue;
 import io.quarkus.runtime.annotations.Recorder;
 
 @Recorder
 public class BucketPodStorageRecorder {
 
-    private final RateLimiterRuntimeConfig config;
+    private final RuntimeValue<RateLimiterRuntimeConfig> config;
     Map<MethodDescription, List<BucketPod>> pods = new HashMap<>();
 
-    public BucketPodStorageRecorder(RateLimiterRuntimeConfig config) {
+    public BucketPodStorageRecorder(RuntimeValue<RateLimiterRuntimeConfig> config) {
         this.config = config;
     }
 
     private BucketPod getBucketPod(MethodDescription methodDescription, String key,
             String identityResolverClassName) {
-        Bucket bucketConfig = config.buckets().get(key);
+        Bucket bucketConfig = config.getValue().buckets().get(key);
         if (bucketConfig == null) {
             throw new IllegalStateException("missing limits config for " + key);
         }
