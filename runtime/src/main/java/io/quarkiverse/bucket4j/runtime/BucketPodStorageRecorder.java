@@ -77,6 +77,9 @@ public class BucketPodStorageRecorder {
     }
 
     public BucketPodStorage create() {
-        return methodDescription -> pods.get(methodDescription);
+        // A method may be intercepted without a bucket registered for it, e.g. a
+        // method inherited from a super class under a class-level @RateLimited.
+        // Such methods must proceed unlimited rather than fail with an NPE (#154).
+        return methodDescription -> pods.getOrDefault(methodDescription, List.of());
     }
 }
